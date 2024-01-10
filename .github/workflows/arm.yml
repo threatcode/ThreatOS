@@ -55,15 +55,15 @@ jobs:
           ./bin/generate_images_table.py
           ./bin/generate_kernel_stats.py
           mkdir -pv ./public/
-          cp -v ./.gitlab/404.html   ./public/
-          cp -v ./.gitlab/public.css ./public/
-          pandoc --standalone ./.gitlab/www.md    --css=public.css --include-in-header=./.gitlab/header.html --output=./public/index.html
-          pandoc --standalone ./device-stats.md   --css=public.css --include-in-header=./.gitlab/header.html --output=./public/device-stats.html
-          pandoc --standalone ./devices.md        --css=public.css --include-in-header=./.gitlab/header.html --output=./public/devices.html
-          pandoc --standalone ./image-overview.md --css=public.css --include-in-header=./.gitlab/header.html --output=./public/image-overview.html
-          pandoc --standalone ./image-stats.md    --css=public.css --include-in-header=./.gitlab/header.html --output=./public/image-stats.html
-          pandoc --standalone ./images.md         --css=public.css --include-in-header=./.gitlab/header.html --output=./public/images.html
-          pandoc --standalone ./kernel-stats.md   --css=public.css --include-in-header=./.gitlab/header.html --output=./public/kernel-stats.html
+          cp -v ./docs/404.html   ./public/
+          cp -v ./docs/public.css ./public/
+          pandoc --standalone ./docs/www.md    --css=public.css --include-in-header=./docs/header.html --output=./public/index.html
+          pandoc --standalone ./device-stats.md   --css=public.css --include-in-header=./docs/header.html --output=./public/device-stats.html
+          pandoc --standalone ./devices.md        --css=public.css --include-in-header=./docs/header.html --output=./public/devices.html
+          pandoc --standalone ./image-overview.md --css=public.css --include-in-header=./docs/header.html --output=./public/image-overview.html
+          pandoc --standalone ./image-stats.md    --css=public.css --include-in-header=./docs/header.html --output=./public/image-stats.html
+          pandoc --standalone ./images.md         --css=public.css --include-in-header=./docs/header.html --output=./public/images.html
+          pandoc --standalone ./kernel-stats.md   --css=public.css --include-in-header=./docs/header.html --output=./public/kernel-stats.html
           find public/ -type f -name '*.html' | sort | while read -r x; do sed 's_<table>_<table id="pretty">_' "${x}" > /tmp/out; mv /tmp/out "${x}"; done
 
       - name: Archive Documentation
