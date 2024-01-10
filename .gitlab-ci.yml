@@ -12,7 +12,7 @@ variables:
   GIT_DEPTH: 1
 
 .install_prerequesites_pip: &install_prerequesites_pip |
-  pip install -r .gitlab/requirements.txt
+  pip install -r docs/requirements.txt
 
 .setup_for_html: &setup_for_html |
   apt-get update
