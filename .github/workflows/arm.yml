@@ -64,7 +64,7 @@ jobs:
           sudo pandoc --standalone ./image-stats.md    --css=public.css --include-in-header=./docs/header.html --output=./public/image-stats.html
           sudo pandoc --standalone ./images.md         --css=public.css --include-in-header=./docs/header.html --output=./public/images.html
           sudo pandoc --standalone ./kernel-stats.md   --css=public.css --include-in-header=./docs/header.html --output=./public/kernel-stats.html
-          sudo find public/ -type f -name '*.html' | sort | while read -r x; do sed 's_<table>_<table id="pretty">_' "${x}" > /tmp/out; mv /tmp/out "${x}"; done
+      
 
       - name: Archive Documentation
         uses: actions/upload-artifact@v2
