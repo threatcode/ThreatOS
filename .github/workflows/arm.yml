@@ -22,8 +22,8 @@ jobs:
       
       - name: Install Prerequisites
         run: |
-          python -m pip install --upgrade pip
-          pip install -r docs/requirements.txt
+          sudo python -m pip install --upgrade pip
+          sudo pip install -r docs/requirements.txt
 
       - name: Lint YAML
         run: yamllint devices.yml
@@ -41,30 +41,30 @@ jobs:
 
       - name: Install Prerequisites
         run: |
-          python -m pip install --upgrade pip
-          pip install -r docs/requirements.txt
-          apt-get update
-          apt-get -y install pandoc
+          sudo python -m pip install --upgrade pip
+          sudo pip install -r docs/requirements.txt
+          sudo apt-get update
+          sudo apt-get -y install pandoc
 
       - name: Generate Documentation
         run: |
-          ./bin/generate_devices_stats.py
-          ./bin/generate_devices_table.py
-          ./bin/generate_images_overview.py
-          ./bin/generate_images_stats.py
-          ./bin/generate_images_table.py
-          ./bin/generate_kernel_stats.py
-          mkdir -pv ./public/
-          cp -v ./docs/404.html   ./public/
-          cp -v ./docs/public.css ./public/
-          pandoc --standalone ./docs/www.md    --css=public.css --include-in-header=./docs/header.html --output=./public/index.html
-          pandoc --standalone ./device-stats.md   --css=public.css --include-in-header=./docs/header.html --output=./public/device-stats.html
-          pandoc --standalone ./devices.md        --css=public.css --include-in-header=./docs/header.html --output=./public/devices.html
-          pandoc --standalone ./image-overview.md --css=public.css --include-in-header=./docs/header.html --output=./public/image-overview.html
-          pandoc --standalone ./image-stats.md    --css=public.css --include-in-header=./docs/header.html --output=./public/image-stats.html
-          pandoc --standalone ./images.md         --css=public.css --include-in-header=./docs/header.html --output=./public/images.html
-          pandoc --standalone ./kernel-stats.md   --css=public.css --include-in-header=./docs/header.html --output=./public/kernel-stats.html
-          find public/ -type f -name '*.html' | sort | while read -r x; do sed 's_<table>_<table id="pretty">_' "${x}" > /tmp/out; mv /tmp/out "${x}"; done
+          sudo ./bin/generate_devices_stats.py
+          sudo ./bin/generate_devices_table.py
+          sudo ./bin/generate_images_overview.py
+          sudo ./bin/generate_images_stats.py
+          sudo ./bin/generate_images_table.py
+          sudo ./bin/generate_kernel_stats.py
+          sudo mkdir -pv ./public/
+          sudo cp -v ./docs/404.html   ./public/
+          sudo cp -v ./docs/public.css ./public/
+          sudo pandoc --standalone ./docs/www.md    --css=public.css --include-in-header=./docs/header.html --output=./public/index.html
+          sudo pandoc --standalone ./device-stats.md   --css=public.css --include-in-header=./docs/header.html --output=./public/device-stats.html
+          sudo pandoc --standalone ./devices.md        --css=public.css --include-in-header=./docs/header.html --output=./public/devices.html
+          sudo pandoc --standalone ./image-overview.md --css=public.css --include-in-header=./docs/header.html --output=./public/image-overview.html
+          sudo pandoc --standalone ./image-stats.md    --css=public.css --include-in-header=./docs/header.html --output=./public/image-stats.html
+          sudo pandoc --standalone ./images.md         --css=public.css --include-in-header=./docs/header.html --output=./public/images.html
+          sudo pandoc --standalone ./kernel-stats.md   --css=public.css --include-in-header=./docs/header.html --output=./public/kernel-stats.html
+          sudo find public/ -type f -name '*.html' | sort | while read -r x; do sed 's_<table>_<table id="pretty">_' "${x}" > /tmp/out; mv /tmp/out "${x}"; done
 
       - name: Archive Documentation
         uses: actions/upload-artifact@v2
