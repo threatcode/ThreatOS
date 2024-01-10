@@ -1,0 +1,7 @@
+ARG REGISTRY_IMAGE
+ARG TAG
+FROM $REGISTRY_IMAGE/threatos-rolling:$TAG
+
+RUN echo "deb http://threatcode.github.io/threatos threatos-bleeding-edge main contrib non-free non-free-firmware" >/etc/apt/sources.list.d/threatos-bleeding-edge.list
+
+CMD ["bash"]
