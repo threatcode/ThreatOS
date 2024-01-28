@@ -1,7 +1,0 @@
-ARG REGISTRY_IMAGE
-ARG TAG
-FROM $REGISTRY_IMAGE/threatos-rolling:$TAG
-
-RUN echo "deb http://threatcode.github.io/threatos threatos-experimental main contrib non-free non-free-firmware" >/etc/apt/sources.list.d/threatos-experimental.list
-
-CMD ["bash"]
