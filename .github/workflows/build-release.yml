@@ -1,0 +1,90 @@
+name: Build and Release ThreatOS
+
+on:
+  push:
+    tags:
+      - 'v*'  # Matches tags like v1.0.0, v2.1.0, etc.
+
+env:
+  BUILD_DIR: ${{ github.workspace }}/build
+  ARTIFACT_DIR: ${{ github.workspace }}/artifacts
+
+jobs:
+  build:
+    name: Build ThreatOS
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+      with:
+        platforms: all
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+    
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          live-build \
+          squashfs-tools \
+          genisoimage \
+          syslinux-utils \
+          isolinux \
+          syslinux \
+          syslinux-efi \
+          grub-pc \
+          grub-efi-amd64 \
+          grub-efi-ia32 \
+          grub-common \
+          grub2-common \
+          mtools \
+          xorriso \
+          wget \
+          jq
+    
+    - name: Build ThreatOS ISO
+      run: |
+        chmod +x build-threatos.sh
+        sudo ./build-threatos.sh
+        
+        # Create artifacts directory
+        mkdir -p ${{ env.ARTIFACT_DIR }}
+        
+        # Copy ISO to artifacts
+        cp iso-artifacts/*.iso ${{ env.ARTIFACT_DIR }}/
+        
+        # Generate checksum
+        cd ${{ env.ARTIFACT_DIR }}
+        sha256sum *.iso > checksums.txt
+    
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: threatos-iso
+        path: ${{ env.ARTIFACT_DIR }}
+        retention-days: 1
+    
+    - name: Create Release
+      id: create_release
+      uses: softprops/action-gh-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        name: ThreatOS ${{ github.ref_name }}
+        draft: false
+        prerelease: false
+        files: |
+          ${{ env.ARTIFACT_DIR }}/*.iso
+          ${{ env.ARTIFACT_DIR }}/checksums.txt
+    
+    - name: Show release info
+      run: |
+        echo "Release created: ${{ steps.create_release.outputs.upload_url }}"
