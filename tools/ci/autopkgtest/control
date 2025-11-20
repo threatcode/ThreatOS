@@ -1,0 +1,25 @@
+Tests: autopkgtest-pkg
+Restrictions: needs-root, isolation-container
+Depends: @, build-essential, debhelper
+
+Test-Command: set -e
+ for pkg in *.deb; do
+   echo "Testing package: $pkg"
+   # Basic installation test
+   dpkg -i "$pkg" || apt-get install -f -y
+   
+   # Verify the package is installed
+   pkgname=$(dpkg-deb -f "$pkg" Package)
+   dpkg-query -W "$pkgname" || (echo "Package $pkgname not installed correctly"; exit 1)
+   
+   # Run any package-specific tests if they exist
+   if [ -f "/usr/share/$pkgname/tests/run" ]; then
+     echo "Running package tests..."
+     cd "/usr/share/$pkgname/tests/"
+     chmod +x run
+     ./run
+   fi
+   
+   # Clean up
+   apt-get remove -y "$pkgname"
+ done

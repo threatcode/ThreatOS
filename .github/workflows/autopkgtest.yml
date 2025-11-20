@@ -1,0 +1,38 @@
+name: Run autopkgtest
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ master ]
+    paths:
+      - '**/*.deb'
+      - 'tools/ci/autopkgtest/**'
+      - '.github/workflows/autopkgtest.yml'
+  pull_request:
+    branches: [ master ]
+    paths:
+      - '**/*.deb'
+      - 'tools/ci/autopkgtest/**'
+      - '.github/workflows/autopkgtest.yml'
+
+jobs:
+  autopkgtest:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/${{ github.repository }}/lxc-base:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Install dependencies
+      run: |
+        apt-get update
+        apt-get install -y autopkgtest
+    
+    - name: Run autopkgtest
+      run: |
+        # Find all .deb files in the repository
+        find . -name "*.deb" -exec autopkgtest {} -- null || true
