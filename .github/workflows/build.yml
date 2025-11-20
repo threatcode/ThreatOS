@@ -1,0 +1,58 @@
+name: Build ThreatOS
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: debian:bookworm-slim
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Install dependencies
+      run: |
+        apt-get update
+        apt-get install -y \
+          live-build \
+          squashfs-tools \
+          genisoimage \
+          syslinux-utils \
+          isolinux \
+          syslinux \
+          syslinux-efi \
+          grub-pc \
+          grub-efi-amd64 \
+          grub-efi-ia32 \
+          grub-common \
+          grub2-common \
+          mtools \
+          xorriso \
+          wget \
+          git
+          
+    - name: Make scripts executable
+      run: |
+        chmod +x build-threatos.sh
+        chmod +x build-scripts/*.sh
+        
+    - name: Run build
+      run: |
+        mkdir -p iso-artifacts
+        ./build-threatos.sh
+        
+    - name: Upload artifacts
+      if: success()
+      uses: actions/upload-artifact@v3
+      with:
+        name: threatos-iso
+        path: |
+          iso-artifacts/*.iso
+          iso-artifacts/*.sha256
+        retention-days: 5
