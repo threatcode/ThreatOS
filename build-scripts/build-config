@@ -1,0 +1,57 @@
+#!/bin/bash
+
+# ThreatOS Build Configuration
+# This file contains the build configuration for ThreatOS
+
+# Base system configuration
+BUILD_ARCH="amd64"
+BUILD_VARIANT="standard"
+BUILD_TYPE="live"
+BUILD_IMAGE_TYPE="iso"
+BUILD_DISTRIBUTION="bookworm"
+BUILD_MIRROR="http://deb.debian.org/debian/"
+BUILD_MIRROR_SECURITY="http://security.debian.org/"
+BUILD_KERNEL_PACKAGE="linux-image-amd64"
+BUILD_KERNEL_CMDLINE="boot=live components splash quiet"
+
+# Build options
+BUILD_OPTIONS="--arch ${BUILD_ARCH} \
+               --distribution ${BUILD_DISTRIBUTION} \
+               --mirror-bootstrap ${BUILD_MIRROR} \
+               --mirror-chroot ${BUILD_MIRROR} \
+               --mirror-chroot-security ${BUILD_MIRROR_SECURITY} \
+               --security true \
+               --updates true \
+               --backports true \
+               --source false \
+               --apt-recommends false \
+               --firmware-binary true \
+               --firmware-chroot true \
+               --linux-packages ${BUILD_KERNEL_PACKAGE}"
+
+# Package lists
+PACKAGE_LISTS="package-lists/standard.list.chroot \
+               package-lists/security-tools.list.chroot \
+               package-lists/desktop.list.chroot"
+
+# Build hooks
+BUILD_HOOKS="hooks/01-custom-settings.hook.chroot \
+             hooks/02-install-packages.hook.chroot \
+             hooks/03-cleanup.hook.chroot"
+
+# Output settings
+OUTPUT_DIR="../iso-artifacts"
+OUTPUT_FILENAME="threatos-${BUILD_DISTRIBUTION}-${BUILD_ARCH}-$(date +%Y%m%d)"
+
+# Build command
+BUILD_CMD="lb config ${BUILD_OPTIONS} \
+           --binary-images ${BUILD_IMAGE_TYPE} \
+           --binary-filesystem squashfs \
+           --bootappend-live '${BUILD_KERNEL_CMDLINE}' \
+           --debian-installer live \
+           --iso-application 'ThreatOS' \
+           --iso-publisher 'ThreatOS Team' \
+           --iso-volume 'ThreatOS Live' \
+           --archive-areas 'main contrib non-free'"
+
+export BUILD_ARCH BUILD_VARIANT BUILD_TYPE BUILD_IMAGE_TYPE BUILD_DISTRIBUTION

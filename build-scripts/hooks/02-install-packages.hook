@@ -1,0 +1,29 @@
+#!/bin/sh
+# /Users/neopilot/ThreatOS/build-scripts/hooks/02-install-packages.hook.chroot
+
+set -e
+
+# Update package lists
+apt-get update
+
+# Install additional packages
+apt-get install -y --no-install-recommends \
+    nmap \
+    tcpdump \
+    netcat \
+    net-tools \
+    dnsutils \
+    iputils-ping \
+    iproute2 \
+    curl \
+    wget \
+    git \
+    vim \
+    htop \
+    tmux \
+    screen \
+    sudo
+
+# Clean up
+apt-get clean
+rm -rf /var/lib/apt/lists/*

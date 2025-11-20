@@ -1,0 +1,21 @@
+#!/bin/sh
+# /Users/neopilot/ThreatOS/config/hooks/0200-install-packages.hook.chroot
+
+set -e
+
+# Install additional packages
+apt-get update
+apt-get install -y --no-install-recommends \
+    curl \
+    git \
+    htop \
+    net-tools \
+    nmap \
+    openssh-server \
+    sudo \
+    vim \
+    wget
+
+# Clean up
+apt-get clean
+rm -rf /var/lib/apt/lists/*

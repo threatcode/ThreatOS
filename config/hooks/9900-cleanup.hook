@@ -1,0 +1,19 @@
+#!/bin/sh
+# /Users/neopilot/ThreatOS/config/hooks/9900-cleanup.hook.chroot
+
+set -e
+
+# Clean up temporary files
+rm -rf /tmp/* /var/tmp/*
+
+# Clean up package cache
+apt-get clean
+rm -rf /var/lib/apt/lists/*
+
+# Clean up logs
+find /var/log -type f -exec truncate -s 0 {} \;
+
+# Remove unnecessary files
+rm -f /var/cache/debconf/*-old
+rm -f /var/lib/dpkg/*-old
+rm -f /var/lib/apt/lists/deb.*

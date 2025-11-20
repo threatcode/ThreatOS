@@ -1,0 +1,45 @@
+#!/bin/sh
+# /Users/neopilot/ThreatOS/config/hooks/0100-setup-system.hook.chroot
+
+set -e
+
+# Set up locales
+echo "en_US.UTF-8 UTF-8" > /etc/locale.gen
+locale-gen
+update-locale LANG=en_US.UTF-8
+
+# Set timezone
+echo "UTC" > /etc/timezone
+dpkg-reconfigure -f noninteractive tzdata
+
+# Configure keyboard
+mkdir -p /etc/default
+echo 'XKBMODEL="pc105"' > /etc/default/keyboard
+echo 'XKBLAYOUT="us"' >> /etc/default/keyboard
+echo 'XKBVARIANT=""' >> /etc/default/keyboard
+echo 'XKBOPTIONS=""' >> /etc/default/keyboard
+echo 'BACKSPACE="guess"' >> /etc/default/keyboard
+dpkg-reconfigure -f noninteractive keyboard-configuration
+
+# Set hostname
+echo "threatos" > /etc/hostname
+echo "127.0.1.1 threatos.localdomain threatos" >> /etc/hosts
+
+# Create default user
+useradd -m -s /bin/bash threatos
+echo "threatos:threatos" | chpasswd
+usermod -aG sudo threatos
+
+# Set root password
+echo "root:threatos" | chpasswd
+
+# Configure sudo
+echo "%sudo ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/threatos
+chmod 0440 /etc/sudoers.d/threatos
+
+# Update package lists
+apt-get update
+
+# Clean up
+apt-get clean
+rm -rf /var/lib/apt/lists/*

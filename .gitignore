@@ -1,0 +1,140 @@
+# Build artifacts
+/iso-artifacts/*
+!/iso-artifacts/.gitkeep
+!/config/README.md
+!/config/hooks/
+!/config/package-lists/
+!/config/includes.chroot/
+!/config/includes.binary/
+/build/
+*.iso
+*.img
+*.qcow2
+*.vmdk
+*.vdi
+*.raw
+
+# Docker
+.dockerignore
+Dockerfile*
+docker-compose*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+ENV/
+
+# IDE specific files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs and databases
+*.log
+*.sql
+*.sqlite
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Local development
+local-settings.*
+
+# Live build temporary files
+.chroot/
+.cache/
+.livebuild/
+*.hook.chroot
+
+# Keys and secrets
+/keys/*
+!keys/README.md
+!keys/.gitkeep
+
+# Temporary files
+*.tmp
+*.bak
+*~
+
+# Package manager specific
+Pipfile.lock
+poetry.lock
+package-lock.json
+yarn.lock
+
+# Build cache
+.cache/
+*.pyc
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Documentation
+/docs/_build/
+/site/
+
+# Local development
+.local/
+
+# Virtual machine files
+*.vbox*
+*.vdi
+*.vmdk
+*.vmx
+*.nvram
+
+# Vagrant
+.vagrant/
+
+# Ansible
+*.retry
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+
+# Packer
+packer_cache/
+output-*/
+
+# Vagrant
+.vagrant/
+*.box

@@ -1,0 +1,34 @@
+# Common build configuration for ThreatOS
+
+# Base system configuration
+DISTRIBUTION="bookworm"
+ARCHITECTURE="amd64"
+BUILD_ARCH="amd64"
+MIRROR="http://deb.debian.org/debian/"
+SECURITY_MIRROR="http://security.debian.org/"
+UPDATES_MIRROR="${MIRROR}"
+BACKPORTS_MIRROR="${MIRROR}"
+
+# Build options
+BUILD_OPTIONS="
+    --arch ${ARCHITECTURE}
+    --distribution ${DISTRIBUTION}
+    --mirror-bootstrap ${MIRROR}
+    --mirror-binary ${MIRROR}
+    --mirror-binary-security ${SECURITY_MIRROR}
+    --mirror-binary-updates ${UPDATES_MIRROR}
+    --mirror-binary-backports ${BACKPORTS_MIRROR}
+    --security true
+    --updates true
+    --backports true
+    --source false
+    --apt-recommends false
+    --firmware-binary true
+    --firmware-chroot true
+    --bootappend-live 'boot=live components splash quiet'
+    --debian-installer live
+    --iso-application 'ThreatOS'
+    --iso-publisher 'ThreatOS Team'
+    --iso-volume 'ThreatOS Live'
+    --archive-areas 'main contrib non-free'
+"
