@@ -1,0 +1,128 @@
+name: Test ThreatOS
+
+on:
+  push:
+    branches: [ main, master ]
+    paths-ignore:
+      - '**/*.md'
+      - '**/*.txt'
+      - '**/*.png'
+      - '**/*.jpg'
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.9', '3.10', '3.11']
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+        
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest pytest-cov codecov
+        
+    - name: Run unit tests
+      run: |
+        cd tests
+        pytest -v unit/ --cov=.. --cov-report=xml --cov-report=term
+        
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        fail_ci_if_error: false
+        verbose: true
+        
+    - name: Run integration tests (basic checks)
+      run: |
+        # Install required system packages
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends \
+          shellcheck \
+          bash
+        
+        # Run shellcheck on all shell scripts
+        echo "Running shellcheck..."
+        find . -name "*.sh" -not -path "./tests/*" -not -path "./venv/*" -not -path "./ENV/*" | \
+          xargs -I {} sh -c 'echo "Checking {}" && shellcheck {} || exit 1'
+        
+        # Run basic integration tests (non-destructive)
+        cd tests
+        pytest -v integration/ -m "not slow"
+        
+    - name: Check for required files
+      run: |
+        # Check for required files
+        required_files=(
+          "build-threatos.sh"
+          "build-scripts/build.sh"
+          "build-scripts/check-dependencies.sh"
+          "build-scripts/fix-hook-extensions.sh"
+          "installer/common/bootloaders/grub-pc/grub.cfg"
+          "installer/common/bootloaders/syslinux_common/menu.cfg"
+        )
+        
+        for file in "${required_files[@]}"; do
+          if [ ! -f "$file" ]; then
+            echo "::error::Required file not found: $file"
+            exit 1
+          fi
+        done
+        
+        echo "All required files are present"
+
+  build-dry-run:
+    name: Build Dry Run
+    needs: test
+    runs-on: ubuntu-latest
+    container: debian:bookworm-slim
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install dependencies
+      run: |
+        apt-get update
+        apt-get install -y --no-install-recommends \
+          live-build \
+          squashfs-tools \
+          genisoimage \
+          syslinux-utils \
+          isolinux \
+          syslinux \
+          syslinux-efi \
+          grub-efi-amd64 \
+          grub-common \
+          grub2-common \
+          mtools \
+          xorriso \
+          wget \
+          git \
+          ca-certificates
+        apt-get clean
+        rm -rf /var/lib/apt/lists/*
+          
+    - name: Make scripts executable
+      run: |
+        chmod +x build-threatos.sh
+        chmod +x build-scripts/*.sh
+        
+    - name: Run build in dry-run mode
+      run: |
+        mkdir -p iso-artifacts
+        ./build-threatos.sh --dry-run || (cat iso-artifacts/build.log && exit 1)
