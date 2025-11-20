@@ -1,0 +1,56 @@
+#!/bin/bash
+
+# ThreatOS Desktop Variant Build Configuration
+# This file contains the build configuration for ThreatOS desktop variants
+
+# Source the base configuration
+source "$(dirname "${BASH_SOURCE[0]}")/build-config"
+
+# Desktop variant configuration
+BUILD_IMAGE_TYPE="img"
+BUILD_OPTIONS+=(--binary-images "${BUILD_IMAGE_TYPE}")
+BUILD_OPTIONS+=(--debian-installer "live")
+BUILD_OPTIONS+=(--system "live")
+
+# Set output directory and filename
+OUTPUT_DIR="${SCRIPT_DIR}/../desktop-artifacts"
+OUTPUT_FILENAME="threatos-desktop-${BUILD_DISTRIBUTION}-${BUILD_ARCH}-$(date +%Y%m%d)"
+
+# Desktop variant selection
+if [ -z "${SELECTED_VARIANT}" ]; then
+    # If no variant is selected, use the default
+    variant_info=$("${SCRIPT_DIR}/select-desktop-variant.sh")
+    read -r SELECTED_VARIANT SELECTED_PACKAGES SELECTED_DESKTOP <<< "${variant_info}"
+fi
+
+# Update package lists to include the selected variant's packages
+PACKAGE_LISTS="${PACKAGE_LISTS} ${SELECTED_PACKAGES}"
+
+# Set the default desktop session
+BUILD_KERNEL_CMDLINE+=" desktop=${SELECTED_DESKTOP}"
+
+# Update build options with the new kernel command line
+for i in "${!BUILD_OPTIONS[@]}"; do
+    if [[ "${BUILD_OPTIONS[$i]}" == --bootappend-live* ]]; then
+        BUILD_OPTIONS[$i]="--bootappend-live ${BUILD_KERNEL_CMDLINE}"
+        break
+    fi
+done
+
+# Add variant-specific packages to the package lists
+case "${SELECTED_VARIANT}" in
+    "gnome")
+        # Additional GNOME specific configurations
+        BUILD_OPTIONS+=(--debian-installer "live")
+        ;;
+    "kde")
+        # Additional KDE specific configurations
+        BUILD_OPTIONS+=(--debian-installer "live")
+        ;;
+    "xfce")
+        # Additional XFCE specific configurations
+        BUILD_OPTIONS+=(--debian-installer "live")
+        ;;
+esac
+
+echo "[+] Building ${SELECTED_VARIANT^} desktop variant"

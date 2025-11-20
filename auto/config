@@ -1,0 +1,294 @@
+#!/usr/bin/env bash
+#
+# ThreatOS Build Configuration Script
+# This script configures the build environment for ThreatOS
+#
+# Usage: ./auto/config [options] [lb-options]
+#
+# Options:
+#   -a, --arch, --architecture ARCH  Set target architecture
+#   --distribution DIST             Set distribution name (default: threatos-rolling)
+#   --variant VARIANT               Set build variant
+#   -p, --proposed-updates         Enable proposed updates
+#   -h, --help                     Show this help message
+
+set -euo pipefail
+
+# Global variables
+declare -r SCRIPT_NAME="${0##*/}"
+declare -r VERSION="1.0.0"
+
+# Default values
+declare -r DEFAULT_MIRROR="https://threatcode.github.io/threatos"
+declare -r PUBLIC_MIRROR="https://http.threatcode.github.io/threatos"
+
+# Initialize variables
+declare threatos_mirror=""
+declare public_threatos_mirror=""
+declare dist="threatos-rolling"
+declare variant=""
+declare arch=""
+declare enable_pu=0
+
+# Error handling
+function error_exit() {
+    echo -e "\nERROR: $1" >&2
+    exit "${2:-1}"
+}
+
+# Print usage information
+function print_usage() {
+    cat << EOF
+Usage: $SCRIPT_NAME [options] [lb-options]
+
+Options:
+  -a, --arch, --architecture ARCH  Set target architecture
+  --distribution DIST             Set distribution name (default: $dist)
+  --variant VARIANT               Set build variant
+  -p, --proposed-updates         Enable proposed updates
+  -h, --help                     Show this help message
+  -v, --version                  Show version information
+
+All other options are passed directly to live-build's lb config
+EOF
+}
+
+# Check for required dependencies
+function check_dependencies() {
+    local -a deps=("wget" "lb" "dpkg")
+    local missing=()
+
+    for dep in "${deps[@]}"; do
+        if ! command -v "$dep" >/dev/null 2>&1; then
+            missing+=("$dep")
+        fi
+    done
+
+    if [ ${#missing[@]} -gt 0 ]; then
+        error_exit "Missing required dependencies: ${missing[*]}"
+    fi
+}
+
+# Parse command line arguments
+function parse_arguments() {
+    local temp=()
+
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -a|--arch|--architecture|--architectures)
+                arch="$2"
+                temp+=("$1" "$2")
+                shift 2
+                ;;
+            --distribution)
+                dist="$2"
+                shift 2
+                ;;
+            --variant)
+                variant="$2"
+                shift 2
+                ;;
+            -p|--proposed-updates)
+                enable_pu=1
+                shift
+                ;;
+            -h|--help)
+                print_usage
+                exit 0
+                ;;
+            -v|--version)
+                echo "$SCRIPT_NAME $VERSION"
+                exit 0
+                ;;
+            --)
+                shift
+                break
+                ;;
+            -*)
+                temp+=("$1")
+                shift
+                ;;
+            *)
+                temp+=("$1")
+                shift
+                ;;
+        esac
+    done
+
+    # Set remaining arguments
+    set -- "${temp[@]}" "$@"
+}
+
+# Main execution
+function main() {
+    # Check for root privileges if needed
+    if [ "$(id -u)" -eq 0 ]; then
+        echo "Warning: Running as root is not recommended. Use with caution." >&2
+    fi
+
+    # Set mirror
+    if [ -e ".mirror" ]; then
+        threatos_mirror=$(<.mirror)
+    else
+        threatos_mirror="$DEFAULT_MIRROR"
+    fi
+    public_threatos_mirror="$PUBLIC_MIRROR"
+
+    # Parse command line arguments
+    parse_arguments "$@"
+
+    # Set architecture if not provided
+    if [ -z "$arch" ]; then
+        arch=$(dpkg --print-architecture)
+    fi
+
+    # Check dependencies
+    check_dependencies
+
+    # Resolve release name
+    if ! dist=$(wget -q -O- "$threatos_mirror/dists/$dist/Release" 2>/dev/null | awk '/^Codename:/ {print $2}'); then
+        error_exit "Failed to resolve build release from $threatos_mirror"
+    fi
+
+    # Handle live-build configuration
+    setup_live_build_config
+
+    # Process architecture-specific options
+    process_architecture_options
+
+    # Process distribution-specific options
+    process_distribution_options
+
+    # Setup configuration files
+    setup_config_files
+
+    # Run live-build configuration
+    run_live_build "$@"
+}
+
+# Setup live build configuration
+function setup_live_build_config() {
+    local live_build_dir="${LIVE_BUILD:-/usr/share/live/build}"
+    
+    # Create symlink for debian-cd if needed
+    if [ ! -e "$live_build_dir/data/debian-cd/$dist" ]; then
+        if [ -w "$live_build_dir/data/debian-cd" ]; then
+            ln -sf sid "$live_build_dir/data/debian-cd/$dist" ||
+                error_exit "Failed to create debian-cd symlink"
+        else
+            error_exit "Missing write permissions for $live_build_dir/data/debian-cd.\nRun: sudo ln -sf sid $live_build_dir/data/debian-cd/$dist"
+        fi
+    fi
+}
+
+# Process architecture-specific options
+function process_architecture_options() {
+    case "$arch" in
+        amd64)
+            lb_opts="--debian-installer live"
+            ;;
+        i386)
+            lb_opts="--debian-installer live --linux-flavours 686-pae"
+            ;;
+        arm64)
+            lb_opts="--bootloaders grub-efi --uefi-secure-boot disable"
+            ;;
+        armhf)
+            lb_opts="--binary-images hdd --binary-filesystem ext4 --chroot-filesystem none"
+            ;;
+        *)
+            echo "WARNING: Configuration not tested on architecture: $arch" >&2
+            ;;
+    esac
+}
+
+# Process distribution-specific options
+function process_distribution_options() {
+    case "$dist" in
+        threatos-last-snapshot)
+            lb_opts="$lb_opts --distribution-binary threatos-rolling"
+            lb_opts="$lb_opts --debootstrap-script /usr/share/debootstrap/scripts/threatos-rolling"
+            ;;
+    esac
+}
+
+# Setup configuration files
+function setup_config_files() {
+    # Clean up previous configuration
+    if [ -d "threatos-config" ]; then
+        find threatos-config -type f | while read -r file; do
+            config_file="config/${file#threatos-config/*/}"
+            [ -e "$config_file" ] && rm -fv "$config_file"
+        done
+    fi
+    
+    # Remove old proposed updates files
+    rm -f config/archives/threatos-proposed-updates.list.*
+
+    # Copy base configuration
+    if [ -d "threatos-config/common" ]; then
+        cp -rT threatos-config/common config ||
+            error_exit "Failed to copy common configuration"
+    fi
+
+    # Copy variant configuration if specified
+    if [ -n "$variant" ] && [ -d "threatos-config/variant-$variant" ]; then
+        cp -rTL "threatos-config/variant-$variant" config ||
+            error_exit "Failed to copy variant configuration: $variant"
+    fi
+
+    # Setup proposed updates if enabled
+    if [ "$enable_pu" -eq 1 ]; then
+        mkdir -p config/archives || error_exit "Failed to create archives directory"
+        
+        cat > "config/archives/threatos-proposed-updates.list.chroot" << EOF
+deb $threatos_mirror $dist-proposed-updates main contrib non-free non-free-firmware
+EOF
+        
+        cat > "config/archives/threatos-proposed-updates.list.binary" << EOF
+deb $public_threatos_mirror $dist-proposed-updates main contrib non-free non-free-firmware
+EOF
+    fi
+}
+
+# Run live-build configuration
+function run_live_build() {
+    local lb_cmd=(
+        lb config noauto
+        --apt-indices false
+        --distribution "$dist"
+        --debian-installer-distribution "$dist"
+        --archive-areas "main contrib non-free non-free-firmware"
+        --debootstrap-options "--keyring=/usr/share/keyrings/threatos-archive-keyring.gpg"
+        --keyring-packages threatos-archive-keyring
+        --updates false
+        --backports false
+        --source false
+        --firmware-binary true
+        --firmware-chroot true
+        --mirror-bootstrap "$threatos_mirror"
+        --mirror-debian-installer "$threatos_mirror"
+        --mirror-binary "$public_threatos_mirror"
+        --iso-application "ThreatOS"
+        --iso-publisher "ThreatOS"
+        --iso-volume "ThreatOS Live"
+        --linux-packages linux-image
+        --memtest memtest86+
+        --bootappend-live "boot=live components quiet splash noeject"
+        --bootappend-live-failsafe "boot=live components noeject memtest noapic noapm nodma nomce nolapic nomodeset nosmp nosplash vga=normal"
+        --bootappend-install "net.ifnames=0"
+        --security false
+        --win32-loader false
+        $lb_opts
+        "$@"
+    )
+
+    # Execute the live-build command
+    echo "Running: ${lb_cmd[*]}"
+    "${lb_cmd[@]}" || error_exit "live-build configuration failed"
+}
+
+# Main entry point
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    main "$@"
+fi
