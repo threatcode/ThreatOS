@@ -1,0 +1,35 @@
+# Britney2 - Debian's Release Team's testing migration tool
+git
+python3-debian
+python3-apt
+python3-yaml
+python3-requests
+python3-pip
+python3-setuptools
+python3-debianbts
+python3-debian
+python3-apt
+python3-yaml
+python3-requests
+python3-pip
+python3-setuptools
+python3-debianbts
+python3-debian
+python3-apt
+python3-yaml
+python3-requests
+python3-pip
+python3-setuptools
+python3-debianbts
+
+# Clone the Britney2 repository
+wget -qO- https://salsa.debian.org/release-team/britney2/-/archive/master/britney2-master.tar.gz | tar xz -C /usr/local/src/
+mv /usr/local/src/britney2-master /usr/local/src/britney2
+
+# Install Britney2
+cd /usr/local/src/britney2
+python3 setup.py install
+
+# Create symlink to make britney2 command available
+ln -s /usr/local/src/britney2/britney.py /usr/local/bin/britney2
+chmod +x /usr/local/bin/britney2

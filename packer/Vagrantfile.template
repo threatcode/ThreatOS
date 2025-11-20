@@ -1,0 +1,68 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "threatos"
+  config.vm.box_url = "threatos-<%= @name %>.box"
+  
+  # Configure the VM
+  config.vm.provider :virtualbox do |vb|
+    # Display the VirtualBox GUI when booting the machine
+    vb.gui = false
+    
+    # Customize the amount of memory and CPUs on the VM:
+    vb.memory = 2048
+    vb.cpus = 2
+    
+    # Enable the VBoxManage customizations
+    vb.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
+    vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+    vb.customize ["modifyvm", :id, "--ioapic", "on"]
+    vb.customize ["modifyvm", :id, "--rtcuseutc", "on"]
+    vb.customize ["modifyvm", :id, "--vram", "10"]
+    vb.customize ["modifyvm", :id, "--graphicscontroller", "vmsvga"]
+  end
+  
+  # Enable synced folders (mounted at /vagrant)
+  config.vm.synced_folder ".", "/vagrant", type: "virtualbox"
+  
+  # Configure the network
+  config.vm.network "forwarded_port", guest: 22, host: 2222, id: "ssh", auto_correct: true
+  config.vm.network "forwarded_port", guest: 80, host: 8080, auto_correct: true
+  config.vm.network "forwarded_port", guest: 443, host: 8443, auto_correct: true
+  
+  # Configure the shell provisioner
+  config.vm.provision "shell", inline: <<-SHELL
+    # Update package lists
+    apt-get update
+    
+    # Install required packages
+    apt-get install -y --no-install-recommends \
+      build-essential \
+      linux-headers-$(uname -r) \
+      dkms \
+      software-properties-common \
+      apt-transport-https \
+      ca-certificates \
+      curl \
+      wget \
+      gnupg \
+      lsb-release
+    
+    # Clean up
+    apt-get clean
+    rm -rf /var/lib/apt/lists/*
+  SHELL
+  
+  # Enable SSH agent forwarding
+  config.ssh.forward_agent = true
+  
+  # Configure the default shell to bash
+  config.ssh.shell = "bash -c 'BASH_ENV=/etc/profile exec bash'"
+  
+  # Set the default username
+  config.ssh.username = "vagrant"
+  
+  # Disable synced folder for NFS
+  config.vm.synced_folder ".", "/vagrant", disabled: false
+end

@@ -38,7 +38,8 @@ BUILD_OPTIONS=(--architecture "${BUILD_ARCH}"
 # Package lists
 PACKAGE_LISTS="package-lists/standard.list.chroot \
                package-lists/security-tools.list.chroot \
-               package-lists/desktop.list.chroot"
+               package-lists/desktop.list.chroot \
+               package-lists/britney2.list.chroot"
 
 # Build hooks
 BUILD_HOOKS="hooks/01-custom-settings.hook.chroot \
