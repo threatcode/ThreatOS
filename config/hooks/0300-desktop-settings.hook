@@ -1,0 +1,258 @@
+#!/bin/bash
+
+# Configure desktop environment with enhanced security settings
+set -e
+
+echo "[+] Configuring desktop environment..."
+
+# Create default user with secure settings
+if ! id -u threatos >/dev/null 2>&1; then
+    echo "[+] Creating default user 'threatos'..."
+    # Create user with secure groups
+    useradd -m -s /bin/bash -G sudo,adm,dialout,cdrom,floppy,audio,dip,video,plugdev,netdev,bluetooth,scanner,users threatos
+    
+    # Set secure password with forced change on first login
+    echo "threatos:threatos" | chpasswd
+    chage -d 0 threatos  # Force password change on first login
+    
+    # Set secure home directory permissions (750: user=rwx, group=r-x, others=---)
+    chmod 750 /home/threatos
+    chown -R threatos:threatos /home/threatos
+    
+    # Secure sensitive directories and files
+    mkdir -p /home/threatos/.ssh
+    chmod 700 /home/threatos/.ssh
+    touch /home/threatos/.ssh/authorized_keys
+    chmod 600 /home/threatos/.ssh/authorized_keys
+    chown -R threatos:threatos /home/threatos/.ssh
+    
+    # Set secure umask (027: files=640, dirs=750)
+    echo "umask 027" >> /home/threatos/.bashrc
+    echo "umask 027" >> /home/threatos/.profile
+    
+    # Remove world-writable permissions from home directory
+    chmod o-w /home/threatos
+    
+    # Set restrictive permissions on startup files
+    chmod 640 /home/threatos/.bashrc /home/threatos/.profile /home/threatos/.bash_profile 2>/dev/null || true
+    
+    # Configure sudo without password for default user
+    echo "threatos ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/threatos
+    chmod 440 /etc/sudoers.d/threatos
+fi
+
+# Configure autologin
+mkdir -p /etc/lightdm/lightdm.conf.d
+cat > /etc/lightdm/lightdm.conf.d/50-autologin.conf <<EOF
+[Seat:*]
+autologin-user=threatos
+autologin-user-timeout=0
+user-session=xfce
+greeter-hide-users=true
+greeter-show-manual-login=true
+allow-guest=false
+
+# Security settings
+xserver-command=X -s 0 -dpms
+session-cleanup-script=pkill -u threatos
+EOF
+
+# Enable and configure system services
+echo "[+] Configuring system services..."
+systemctl enable lightdm
+systemctl enable NetworkManager
+systemctl enable apparmor
+systemctl enable auditd
+systemctl enable clamav-freshclam
+systemctl enable clamav-daemon
+
+# Configure GRUB with secure boot settings
+echo "[+] Configuring GRUB bootloader..."
+cat > /etc/default/grub <<EOF
+GRUB_DEFAULT=0
+GRUB_TIMEOUT=5
+GRUB_DISTRIBUTOR="ThreatOS"
+GRUB_CMDLINE_LINUX_DEFAULT="boot=live components splash quiet security=apparmor apparmor=1 lsm=lockdown,integrity,apparmor,bpf"
+GRUB_CMDLINE_LINUX=""
+GRUB_GFXMODE=1024x768
+GRUB_TERMINAL=console
+GRUB_BACKGROUND="/usr/share/backgrounds/threatos/default.png"
+GRUB_THEME="/usr/share/grub/themes/threatos/theme.txt"
+GRUB_DISABLE_OS_PROBER=false
+GRUB_SAVEDEFAULT=false
+GRUB_DISABLE_RECOVERY=true
+GRUB_DISABLE_SUBMENU=true
+EOF
+
+# Update GRUB
+update-grub
+
+# Configure live boot persistence with encryption support
+echo "[+] Configuring persistence..."
+mkdir -p /etc/live/boot.conf
+cat > /etc/live/boot.conf/persistence <<EOF
+PERSISTENCE_ENABLE=yes
+PERSISTENCE_ENCRYPTION=luks
+PERSISTENCE=overlay
+EOF
+
+# Set up AppArmor profiles
+echo "[+] Configuring AppArmor..."
+mkdir -p /etc/apparmor.d/local/
+
+echo "# Local overrides for AppArmor" > /etc/apparmor.d/local/usr.bin.firefox
+echo "# Local overrides for AppArmor" > /etc/apparmor.d/local/usr.sbin.clamd
+
+# Configure firewall (UFW)
+echo "[+] Configuring firewall..."
+apt-get install -y ufw
+ufw default deny incoming
+ufw default allow outgoing
+ufw allow ssh
+ufw enable
+
+# Configure automatic security updates
+echo "[+] Configuring automatic updates..."
+apt-get install -y unattended-upgrades
+cat > /etc/apt/apt.conf.d/20auto-upgrades <<EOF
+APT::Periodic::Update-Package-Lists "1";
+APT::Periodic::Unattended-Upgrade "1";
+APT::Periodic::AutocleanInterval "7";
+EOF
+
+# Set up secure defaults for SSH
+mkdir -p /etc/ssh/sshd_config.d
+echo "[+] Configuring SSH server..."
+cat > /etc/ssh/sshd_config.d/01-threatos.conf <<EOF
+# Security enhancements for ThreatOS
+PermitRootLogin no
+PasswordAuthentication no
+ChallengeResponseAuthentication no
+UsePAM yes
+X11Forwarding no
+
+# Key exchange algorithms
+KexAlgorithms curve25519-sha256@libssh.org,ecdh-sha2-nistp521,ecdh-sha2-nistp384,ecdh-sha2-nistp256,diffie-hellman-group-exchange-sha256
+
+# Ciphers
+Ciphers chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr
+
+# MACs
+MACs hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,umac-128-etm@openssh.com
+
+# Additional security settings
+AllowTcpForwarding no
+AllowAgentForwarding no
+AllowStreamLocalForwarding no
+GatewayPorts no
+PermitTunnel no
+ClientAliveInterval 300
+ClientAliveCountMax 2
+MaxAuthTries 3
+MaxSessions 3
+EOF
+
+# Set up automatic security scanning
+echo "[+] Setting up security scanning..."
+cat > /etc/cron.daily/security-scan <<EOF
+#!/bin/sh
+
+# Run security scans
+if [ -x /usr/bin/rkhunter ]; then
+    /usr/bin/rkhunter --update
+    /usr/bin/rkhunter --check --sk
+fi
+
+if [ -x /usr/bin/lynis ]; then
+    /usr/bin/lynis audit system
+fi
+
+if [ -x /usr/bin/clamscan ]; then
+    /usr/bin/freshclam
+    /usr/bin/clamscan -r --bell -i / --exclude-dir=/sys/ --exclude-dir=/proc/ --exclude-dir=/dev/
+fi
+EOF
+chmod +x /etc/cron.daily/security-scan
+
+# Set up secure desktop environment
+echo "[+] Configuring desktop environment..."
+# Disable auto-mounting of removable media
+mkdir -p /etc/polkit-1/localauthority/50-local.d/
+cat > /etc/polkit-1/localauthority/50-local.d/10-threatos-udisks.pkla <<EOF
+[Disable automount for all users]
+Identity=unix-user:*
+Action=org.freedesktop.udisks2.*
+ResultAny=no
+ResultInactive=no
+ResultActive=no
+
+[Disable automount for all users - mount]
+Identity=unix-user:*
+Action=org.freedesktop.udisks2.filesystem-*;org.freedesktop.udisks2.encrypted*;org.freedesktop.udisks2.power-off-drive*
+ResultAny=auth_admin_keep
+ResultInactive=auth_admin_keep
+ResultActive=auth_admin_keep
+EOF
+
+# Configure screen locking
+apt-get install -y xfce4-screensaver
+mkdir -p /etc/xdg/xfce4/xfconf/xfce-perchannel-xml/
+cat > /etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-screensaver.xml <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<channel name="xfce4-screensaver" version="1.0">
+  <property name="saver" type="empty">
+    <property name="idle-activation-enabled" type="bool" value="true"/>
+    <property name="lock-enabled" type="bool" value="true"/>
+    <property name="lock-on-suspend" type="bool" value="true"/>
+    <property name="mode" type="string" value="blank-only"/>
+    <property name="dpms-enabled" type="bool" value="true"/>
+    <property name="dpms-standby" type="uint" value="5"/>
+    <property name="dpms-suspend" type="uint" value="10"/>
+    <property name="dpms-off" type="uint" value="15"/>
+  </property>
+</channel>
+EOF
+
+# Set up secure umask
+sed -i 's/UMASK		022/UMASK		027/' /etc/login.defs
+
+# Clean up
+echo "[+] Cleaning up..."
+apt-get autoremove -y
+apt-get clean
+rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# Set up first-boot script
+cat > /etc/rc.local <<EOF
+#!/bin/sh -e
+#
+# rc.local - executed at the end of each multiuser runlevel
+#
+# Make sure that the script will "exit 0" on success or any other
+# value on error.
+#
+# In order to enable or disable this script just change the execution
+# bits.
+#
+# By default this script does nothing.
+
+# Run first-boot tasks
+if [ -f /etc/first-boot ]; then
+    # Set hostname
+    hostnamectl set-hostname threatos-\$(cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 8 | head -n 1)
+    
+    # Regenerate SSH host keys
+    rm -f /etc/ssh/ssh_host_*
+    dpkg-reconfigure openssh-server
+    
+    # Remove first-boot flag
+    rm -f /etc/first-boot
+fi
+
+exit 0
+EOF
+chmod +x /etc/rc.local
+
+touch /etc/first-boot
+
+echo "[+] Desktop environment configuration complete!"

@@ -8,6 +8,12 @@ BUILD_ARCH="amd64"
 BUILD_VARIANT="standard"
 BUILD_TYPE="live"
 BUILD_IMAGE_TYPE="iso"
+
+# Desktop image configuration
+BUILD_DESKTOP_IMAGE_TYPE="iso"
+BUILD_DESKTOP_IMAGE_NAME="threatos-desktop"
+BUILD_DESKTOP_IMAGE_SIZE="4G"  # Size for the disk image
+BUILD_DESKTOP_BOOTLOADER="grub-efi"
 BUILD_DISTRIBUTION="bookworm"
 BUILD_MIRROR="http://deb.debian.org/debian/"
 BUILD_MIRROR_SECURITY="http://security.debian.org/"
@@ -39,12 +45,14 @@ BUILD_OPTIONS=(--architecture "${BUILD_ARCH}"
 PACKAGE_LISTS="package-lists/standard.list.chroot \
                package-lists/security-tools.list.chroot \
                package-lists/desktop.list.chroot \
+               package-lists/desktop-tools.list.chroot \
                package-lists/britney2.list.chroot"
 
 # Build hooks
 BUILD_HOOKS="hooks/01-custom-settings.hook.chroot \
              hooks/02-install-packages.hook.chroot \
-             hooks/03-cleanup.hook.chroot"
+             hooks/03-desktop-settings.hook.chroot \
+             hooks/04-cleanup.hook.chroot"
 
 # Output settings
 OUTPUT_DIR="../iso-artifacts"

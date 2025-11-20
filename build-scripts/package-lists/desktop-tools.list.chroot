@@ -1,0 +1,22 @@
+# Desktop tools and utilities
+live-boot
+live-config
+live-config-systemd
+live-tools
+grub-efi
+shim-signed
+mokutil
+os-prober
+parted
+gparted
+ntfs-3g
+grub-pc-bin
+syslinux-common
+syslinux-efi
+syslinux
+isolinux
+live-boot-initramfs-tools
+live-boot-doc
+live-config-doc
+live-tools-doc
+live-boot-initramfs-tools-doc
