@@ -1,0 +1,76 @@
+/*
+ * ThreatOS GTK 3.0 Main Styles
+ * Core styling for ThreatOS GTK theme
+ */
+
+/* Import the color palette */
+@define-color threatos_blue #367BF0;
+@define-color threatos_dark_blue #153873;
+@define-color threatos_light_blue #4AAEE6;
+@define-color threatos_green #0CA15E;
+@define-color threatos_orange #FD7D00;
+@define-color threatos_red #D41919;
+@define-color threatos_purple #8C42AB;
+@define-color threatos_dark_gray #2D303B;
+@define-color threatos_medium_gray #4C4F5C;
+@define-color threatos_light_gray #E6E6E6;
+@define-color threatos_white #FFFFFF;
+
+/* Base colors */
+@define-color theme_bg_color #FFFFFF;
+@define-color theme_fg_color #2D303B;
+@define-color theme_base_color #FFFFFF;
+@define-color theme_text_color #2D303B;
+@define-color theme_selected_bg_color @threatos_blue;
+@define-color theme_selected_fg_color #FFFFFF;
+@define-color theme_tooltip_bg_color #2D303B;
+@define-color theme_tooltip_fg_color #FFFFFF;
+
+/* Titlebar colors */
+@define-color titlebar_bg_color #F5F7FA;
+@define-color titlebar_fg_color #2D303B;
+@define-color titlebar_backdrop_color #F5F7FA;
+@define-color titlebar_backdrop_fg_color #4C4F5C;
+
+/* Button colors */
+@define-color button_bg_color #F5F7FA;
+@define-color button_fg_color #2D303B;
+@define-color button_hover_bg_color #E6E9EF;
+@define-color button_active_bg_color #D8DCE5;
+@define-color button_insensitive_bg_color #F5F7FA;
+@define-color button_insensitive_fg_color #A0A4B0;
+
+/* Entry colors */
+@define-color entry_bg_color #FFFFFF;
+@define-color entry_fg_color #2D303B;
+@define-color entry_border_color #D8DCE5;
+@define-color entry_placeholder_color #A0A4B0;
+
+/* Scrollbar colors */
+@define-color scrollbar_track_color #F5F7FA;
+@define-color scrollbar_slider_color #D8DCE5;
+@define-color scrollbar_slider_hover_color #C5CAD6;
+@define-color scrollbar_slider_active_color #A0A4B0;
+
+/* Link colors */
+@define-color link_color @threatos_blue;
+@define-color link_visited_color @threatos_purple;
+
+/* Info colors */
+@define-color info_bg_color @threatos_blue;
+@define-color info_fg_color #FFFFFF;
+@define-color warning_bg_color @threatos_orange;
+@define-color warning_fg_color #FFFFFF;
+@define-color question_bg_color @threatos_blue;
+@define-color question_fg_color #FFFFFF;
+@define-color error_bg_color @threatos_red;
+@define-color error_fg_color #FFFFFF;
+
+/* Import the rest of the theme */
+@import url("gtk-widgets.css");
+@import url("gtk-widgets-assets.css");
+@import url("gtk-widgets-backgrounds.css");
+@import url("gtk-widgets-borders.css");
+@import url("gtk-widgets-colors.css");
+@import url("gtk-widgets-transitions.css");
+@import url("gtk-misc.css");

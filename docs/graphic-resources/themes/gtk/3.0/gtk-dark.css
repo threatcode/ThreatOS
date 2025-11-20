@@ -1,0 +1,174 @@
+/* Dark theme variant for ThreatOS GTK theme */
+@import url("gtk-main.css");
+
+/* Override color variables for dark theme */
+:root {
+  /* Base colors */
+  --color-bg: #1E1E2E;
+  --color-fg: #E0E0E0;
+  --color-accent: #4A90E2;
+  
+  /* Text colors */
+  --color-text: #E0E0E0;
+  --color-text-secondary: #A0A0A0;
+  --color-text-disabled: #606060;
+  
+  /* Background colors */
+  --color-bg-primary: #1E1E2E;
+  --color-bg-secondary: #2A2A3A;
+  --color-bg-tertiary: #363646;
+  
+  /* Border colors */
+  --color-border: #444444;
+  --color-border-hover: #5A5A6A;
+  
+  /* Button colors */
+  --color-button-bg: #2A2A3A;
+  --color-button-hover: #3A3A4A;
+  --color-button-active: #4A4A5A;
+  --color-button-text: #E0E0E0;
+  
+  /* Link colors */
+  --color-link: #4A90E2;
+  --color-link-visited: #9B59B6;
+  --color-link-hover: #6AAEFF;
+  
+  /* Selection colors */
+  --color-selection-bg: #4A90E2;
+  --color-selection-fg: #FFFFFF;
+  
+  /* Error, warning, success colors */
+  --color-error: #FF6B6B;
+  --color-warning: #FFA500;
+  --color-success: #2ECC71;
+  
+  /* Scrollbar colors */
+  --color-scrollbar: #4A4A5A;
+  --color-scrollbar-hover: #5A5A6A;
+  --color-scrollbar-active: #6A6A7A;
+  
+  /* Tooltip colors */
+  --color-tooltip-bg: #2A2A3A;
+  --color-tooltip-fg: #E0E0E0;
+  --color-tooltip-border: #4A4A5A;
+}
+
+/* Dark theme specific overrides */
+GtkWindow {
+  background-color: var(--color-bg-primary);
+  color: var(--color-fg);
+}
+
+/* Dark theme specific widget overrides */
+.background {
+  background-color: var(--color-bg-primary);
+  color: var(--color-fg);
+}
+
+/* Dark theme specific entry styling */
+.entry, .entry:focus, .entry:active, .entry:selected, .entry:selected:focus {
+  background-color: var(--color-bg-tertiary);
+  color: var(--color-text);
+  border-color: var(--color-border);
+  box-shadow: none;
+}
+
+/* Dark theme specific button styling */
+.button, .button:focus, .button:active, .button:checked {
+  background-color: var(--color-button-bg);
+  color: var(--color-button-text);
+  border-color: var(--color-border);
+}
+
+.button:hover {
+  background-color: var(--color-button-hover);
+}
+
+/* Dark theme specific scrollbar styling */
+.scrollbar {
+  background-color: var(--color-bg-secondary);
+}
+
+.scrollbar.slider {
+  background-color: var(--color-scrollbar);
+}
+
+.scrollbar.slider:hover {
+  background-color: var(--color-scrollbar-hover);
+}
+
+.scrollbar.slider:active {
+  background-color: var(--color-scrollbar-active);
+}
+
+/* Dark theme specific menu styling */
+.menu, .context-menu, .menu .menuitem {
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text);
+}
+
+.menu .menuitem:hover {
+  background-color: var(--color-accent);
+  color: white;
+}
+
+/* Dark theme specific treeview styling */
+.treeview {
+  background-color: var(--color-bg-primary);
+  color: var(--color-text);
+}
+
+.treeview:selected, .treeview:selected:focus {
+  background-color: var(--color-selection-bg);
+  color: var(--color-selection-fg);
+}
+
+/* Dark theme specific notebook styling */
+.notebook {
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text);
+}
+
+.notebook tab {
+  background-color: var(--color-bg-tertiary);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+
+.notebook tab:checked {
+  background-color: var(--color-bg-primary);
+  border-bottom-color: var(--color-bg-primary);
+}
+
+/* Dark theme specific tooltip styling */
+tooltip {
+  background-color: var(--color-tooltip-bg);
+  color: var(--color-tooltip-fg);
+  border: 1px solid var(--color-tooltip-border);
+}
+
+/* Dark theme specific statusbar styling */
+.statusbar {
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text);
+  border-top: 1px solid var(--color-border);
+}
+
+/* Dark theme specific infobar styling */
+.infobar {
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text);
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* Dark theme specific sidebar styling */
+.sidebar, .sidebar view, .sidebar scrolledwindow {
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text);
+  border-right: 1px solid var(--color-border);
+}
+
+.sidebar:dir(rtl) {
+  border-left: 1px solid var(--color-border);
+  border-right: none;
+}

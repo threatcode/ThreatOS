@@ -1,0 +1,230 @@
+/*
+ * ThreatOS GTK 3.0 Widgets
+ * Styling for GTK widgets
+ */
+
+/* Base styles for all widgets */
+* {
+    -GtkWidget-focus-line-width: 0;
+    -GtkWidget-focus-padding: 0;
+    -GtkWidget-text-handle-width: 20;
+    -GtkWidget-text-handle-height: 24;
+    -GtkWidget-window-dragging: false;
+    -GtkRange-arrow-scaling: 0.7;
+    -GtkRange-slider-width: 16;
+    -GtkRange-trough-border: 0;
+    -GtkRange-trough-under-steppers: 0;
+    -GtkScrollbar-has-backward-stepper: false;
+    -GtkScrollbar-has-forward-stepper: false;
+    -GtkScrollbar-min-slider-length: 42;
+    -GtkScrolledWindow-scrollbar-spacing: 0;
+    -GtkTreeView-expander-size: 16;
+    -GtkTreeView-horizontal-separator: 4;
+    -GtkTreeView-vertical-separator: 4;
+    -GtkWidget-cursor-aspect-ratio: 0.2;
+    -GtkWidget-link-color: @link_color;
+    -GtkWidget-visited-link-color: @link_visited_color;
+    -GtkWidget-wide-separators: false;
+    -GtkWindow-resize-grip-height: 0;
+    -GtkWindow-resize-grip-width: 0;
+    background-color: transparent;
+    background-image: none;
+    border-color: transparent;
+    border-style: solid;
+    border-width: 0;
+    color: @theme_fg_color;
+    font-family: 'Inter', sans-serif;
+    font-size: 11pt;
+    text-shadow: none;
+}
+
+/* Window */
+window {
+    background-color: @theme_bg_color;
+    color: @theme_fg_color;
+}
+
+/* Buttons */
+button {
+    background-color: @button_bg_color;
+    background-image: none;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.05);
+    color: @button_fg_color;
+    margin: 2px;
+    min-height: 28px;
+    min-width: 28px;
+    padding: 4px 12px;
+    transition: all 200ms ease-in-out;
+}
+
+button:hover {
+    background-color: @button_hover_bg_color;
+    border-color: rgba(0, 0, 0, 0.1);
+}
+
+button:active,
+button:checked {
+    background-color: @button_active_bg_color;
+    border-color: rgba(0, 0, 0, 0.1);
+    box-shadow: inset 0 1px 2px 0 rgba(0, 0, 0, 0.1);
+}
+
+button:disabled {
+    color: @button_insensitive_fg_color;
+    -gtk-icon-effect: dim;
+    opacity: 0.7;
+}
+
+/* Entries */
+entry {
+    background-color: @entry_bg_color;
+    border: 1px solid @entry_border_color;
+    border-radius: 4px;
+    box-shadow: inset 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    color: @entry_fg_color;
+    min-height: 28px;
+    padding: 4px 8px;
+}
+
+entry:focus {
+    border-color: @theme_selected_bg_color;
+    box-shadow: 0 0 0 1px @theme_selected_bg_color;
+}
+
+entry:disabled {
+    background-color: @entry_bg_color;
+    color: @button_insensitive_fg_color;
+}
+
+/* Scrollbars */
+scrollbar {
+    background-color: transparent;
+}
+
+scrollbar slider {
+    background-color: @scrollbar_slider_color;
+    border-radius: 4px;
+    min-height: 24px;
+    min-width: 6px;
+    transition: all 200ms ease-in-out;
+}
+
+scrollbar slider:hover {
+    background-color: @scrollbar_slider_hover_color;
+}
+
+scrollbar slider:active {
+    background-color: @scrollbar_slider_active_color;
+}
+
+scrollbar.vertical slider {
+    min-height: 24px;
+    min-width: 6px;
+}
+
+scrollbar.horizontal slider {
+    min-height: 6px;
+    min-width: 24px;
+}
+
+/* Progress bars */
+progressbar {
+    background-color: @scrollbar_track_color;
+    border-radius: 2px;
+    min-height: 4px;
+}
+
+progressbar progress {
+    background-color: @theme_selected_bg_color;
+    border-radius: 2px;
+}
+
+/* Notebook tabs */
+notebook {
+    background-color: @theme_bg_color;
+    padding: 0;
+}
+
+notebook tab {
+    background-color: @button_bg_color;
+    border: 1px solid @entry_border_color;
+    border-bottom: none;
+    border-radius: 4px 4px 0 0;
+    margin: 0 2px;
+    min-height: 28px;
+    min-width: 80px;
+    padding: 4px 12px;
+}
+
+notebook tab:checked {
+    background-color: @theme_bg_color;
+    border-bottom: 1px solid @theme_bg_color;
+    margin-bottom: -1px;
+}
+
+notebook tab:first-child {
+    margin-left: 0;
+}
+
+notebook tab:last-child {
+    margin-right: 0;
+}
+
+/* Tree and list views */
+treeview.view,
+view {
+    background-color: @theme_base_color;
+    color: @theme_text_color;
+}
+
+treeview.view:selected,
+view:selected {
+    background-color: @theme_selected_bg_color;
+    color: @theme_selected_fg_color;
+}
+
+/* Tooltips */
+tooltip {
+    background-color: @theme_tooltip_bg_color;
+    border-radius: 4px;
+    color: @theme_tooltip_fg_color;
+    padding: 8px 12px;
+}
+
+/* Menus */
+menu {
+    background-color: @theme_bg_color;
+    border: 1px solid @entry_border_color;
+    border-radius: 4px;
+    padding: 4px 0;
+}
+
+menuitem {
+    padding: 6px 12px;
+}
+
+menuitem:hover {
+    background-color: @button_hover_bg_color;
+}
+
+/* Status bars */
+statusbar {
+    background-color: @titlebar_bg_color;
+    border-top: 1px solid @entry_border_color;
+    padding: 4px 8px;
+}
+
+/* Frames */
+frame {
+    border: 1px solid @entry_border_color;
+    border-radius: 4px;
+    margin: 4px;
+    padding: 4px;
+}
+
+frame > label {
+    margin: -20px 4px 2px;
+    padding: 0 4px;
+}

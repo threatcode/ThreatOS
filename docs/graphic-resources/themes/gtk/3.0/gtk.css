@@ -1,0 +1,180 @@
+/*
+ * ThreatOS GTK 3.0 Theme
+ * A clean, modern theme for ThreatOS
+ */
+
+@import url("gtk-main.css");
+@import url("gtk-widgets.css");
+@import url("gtk-widgets-complex.css");
+
+/* Default theme settings */
+:root {
+  /* This will be overridden by the theme variant files */
+  color-scheme: light;
+}
+
+/* Import theme variants */
+@import url("gtk-dark.css") (prefers-color-scheme: dark);
+@import url("gtk-highcontrast.css") (prefers-contrast: more);
+
+/* Theme variant classes for manual switching */
+.threatos-theme-light {
+  color-scheme: light;
+  /* Reset to light theme colors */
+  --color-bg: #FFFFFF;
+  --color-fg: #333333;
+  --color-accent: #367BF0;
+  --color-text: #333333;
+  --color-text-secondary: #666666;
+  --color-text-disabled: #999999;
+  --color-bg-primary: #FFFFFF;
+  --color-bg-secondary: #F5F5F5;
+  --color-bg-tertiary: #EEEEEE;
+  --color-border: #CCCCCC;
+  --color-border-hover: #999999;
+  --color-button-bg: #F5F5F5;
+  --color-button-hover: #E5E5E5;
+  --color-button-active: #DDDDDD;
+  --color-button-text: #333333;
+  --color-link: #1A73E8;
+  --color-link-visited: #9C27B0;
+  --color-link-hover: #0D47A1;
+  --color-selection-bg: #1A73E8;
+  --color-selection-fg: #FFFFFF;
+  --color-error: #D32F2F;
+  --color-warning: #F57C00;
+  --color-success: #388E3C;
+  --color-scrollbar: #CCCCCC;
+  --color-scrollbar-hover: #AAAAAA;
+  --color-scrollbar-active: #888888;
+  --color-tooltip-bg: #333333;
+  --color-tooltip-fg: #FFFFFF;
+  --color-tooltip-border: #555555;
+}
+
+/* Force dark theme */
+.threatos-theme-dark {
+  color-scheme: dark;
+  /* Dark theme colors */
+  --color-bg: #1E1E2E;
+  --color-fg: #E0E0E0;
+  --color-accent: #4A90E2;
+  --color-text: #E0E0E0;
+  --color-text-secondary: #A0A0A0;
+  --color-text-disabled: #606060;
+  --color-bg-primary: #1E1E2E;
+  --color-bg-secondary: #2A2A3A;
+  --color-bg-tertiary: #363646;
+  --color-border: #444444;
+  --color-border-hover: #5A5A6A;
+  --color-button-bg: #2A2A3A;
+  --color-button-hover: #3A3A4A;
+  --color-button-active: #4A4A5A;
+  --color-button-text: #E0E0E0;
+  --color-link: #4A90E2;
+  --color-link-visited: #9B59B6;
+  --color-link-hover: #6AAEFF;
+  --color-selection-bg: #4A90E2;
+  --color-selection-fg: #FFFFFF;
+  --color-error: #FF6B6B;
+  --color-warning: #FFA500;
+  --color-success: #2ECC71;
+  --color-scrollbar: #4A4A5A;
+  --color-scrollbar-hover: #5A5A6A;
+  --color-scrollbar-active: #6A6A7A;
+  --color-tooltip-bg: #2A2A3A;
+  --color-tooltip-fg: #E0E0E0;
+  --color-tooltip-border: #4A4A5A;
+}
+
+/* Force high contrast theme */
+.threatos-theme-highcontrast {
+  color-scheme: dark;
+  /* High contrast theme colors */
+  --color-bg: #000000;
+  --color-fg: #FFFFFF;
+  --color-accent: #00FF00;
+  --color-text: #FFFFFF;
+  --color-text-secondary: #CCCCCC;
+  --color-text-disabled: #888888;
+  --color-bg-primary: #000000;
+  --color-bg-secondary: #111111;
+  --color-bg-tertiary: #222222;
+  --color-border: #00FF00;
+  --color-border-hover: #00CC00;
+  --color-button-bg: #000000;
+  --color-button-hover: #222222;
+  --color-button-active: #444444;
+  --color-button-text: #FFFFFF;
+  --color-link: #00FFFF;
+  --color-link-visited: #FF00FF;
+  --color-link-hover: #00FFFF;
+  --color-selection-bg: #00FF00;
+  --color-selection-fg: #000000;
+  --color-error: #FF0000;
+  --color-warning: #FFFF00;
+  --color-success: #00FF00;
+  --color-scrollbar: #444444;
+  --color-scrollbar-hover: #666666;
+  --color-scrollbar-active: #888888;
+  --color-tooltip-bg: #000000;
+  --color-tooltip-fg: #FFFFFF;
+  --color-tooltip-border: #00FF00;
+}
+
+/* Print styles */
+@media print {
+  /* Ensure good contrast for printing */
+  :root {
+    --color-bg: #FFFFFF;
+    --color-fg: #000000;
+    --color-text: #000000;
+    --color-text-secondary: #333333;
+    --color-text-disabled: #666666;
+    --color-bg-primary: #FFFFFF;
+    --color-bg-secondary: #F5F5F5;
+    --color-bg-tertiary: #EEEEEE;
+    --color-border: #000000;
+    --color-button-bg: #FFFFFF;
+    --color-button-hover: #EEEEEE;
+    --color-button-active: #DDDDDD;
+    --color-button-text: #000000;
+    --color-link: #0000FF;
+    --color-link-visited: #800080;
+    --color-selection-bg: #000000;
+    --color-selection-fg: #FFFFFF;
+  }
+  
+  /* Hide unnecessary elements when printing */
+  .no-print, .no-print * {
+    display: none !important;
+  }
+  
+  /* Ensure links are visible in print */
+  a {
+    text-decoration: underline;
+  }
+  
+  /* Add URL after links in print */
+  a[href]::after {
+    content: " (" attr(href) ")";
+    font-size: 90%;
+    color: #666666;
+  }
+  
+  /* Page breaks */
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+  }
+  
+  /* Avoid breaking inside important elements */
+  p, li, img, pre, blockquote, table, figure {
+    page-break-inside: avoid;
+  }
+}
+
+@import url("gtk-misc.css");
+@import url("apps/gnome-applications.css");
+@import url("apps/unity.css");
+@import url("apps/xfce.css");
+@import url("public/gtk-3.0/gtk-public.css");

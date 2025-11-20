@@ -1,0 +1,631 @@
+/*
+ * ThreatOS GTK 3.0 Complex Widgets
+ * Styling for complex GTK widgets
+ */
+
+/* Tree View */
+treeview.view {
+    background-color: @theme_base_color;
+    color: @theme_text_color;
+    -GtkTreeView-expander-size: 16;
+    -GtkTreeView-horizontal-separator: 4;
+    -GtkTreeView-vertical-separator: 4;
+    -GtkTreeView-grid-line-width: 1;
+    -GtkTreeView-grid-line-pattern: "";
+    -GtkTreeView-tree-line-width: 1;
+    -GtkTreeView-tree-line-pattern: "";
+    -GtkTreeView-fixed-height-mode: FALSE;
+}
+
+treeview.view:selected,
+treeview.view:selected:focus,
+treeview.view:selected:backdrop {
+    background-color: @theme_selected_bg_color;
+    color: @theme_selected_fg_color;
+}
+
+treeview.view:disabled {
+    color: @insensitive_fg_color;
+    background-color: @insensitive_bg_color;
+}
+
+/* Tree View Header */
+treeview.view header {
+    padding: 6px 6px;
+    border-width: 0 0 1px;
+    border-style: solid;
+    border-color: @borders;
+    background-color: @theme_bg_color;
+    color: @theme_fg_color;
+    font-weight: bold;
+}
+
+treeview.view header:backdrop {
+    background-color: @unfocused_bg_color;
+    color: @unfocused_fg_color;
+}
+
+/* Menus */
+menu {
+    padding: 4px 0;
+    background-color: @menu_bg_color;
+    color: @menu_fg_color;
+    border: 1px solid @borders;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.15);
+}
+
+menuitem {
+    padding: 6px 12px;
+    border: none;
+    background-color: transparent;
+    color: @menu_fg_color;
+    transition: all 150ms ease-in-out;
+}
+
+menuitem:hover {
+    background-color: @menu_selected_color;
+    color: @menu_selected_fg_color;
+}
+
+menuitem:disabled {
+    color: @insensitive_fg_color;
+    background-color: transparent;
+}
+
+menuitem separator {
+    min-height: 1px;
+    margin: 4px 0;
+    background-color: @borders;
+}
+
+/* Dialogs */
+dialog {
+    background-color: @theme_bg_color;
+    color: @theme_fg_color;
+    border-radius: 6px;
+    box-shadow: 0 4px 20px 4px rgba(0, 0, 0, 0.15);
+}
+
+dialog .titlebar {
+    padding: 12px 16px;
+    border-bottom: 1px solid @borders;
+    background-color: @titlebar_bg_color;
+    color: @titlebar_fg_color;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+}
+
+dialog .dialog-action-area {
+    padding: 12px 16px;
+    border-top: 1px solid @borders;
+    background-color: @theme_bg_color;
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+}
+
+/* Notebook Tabs */
+notebook {
+    background-color: @theme_bg_color;
+    padding: 0;
+}
+
+notebook > header {
+    background-color: @theme_bg_color;
+    border-bottom: 1px solid @borders;
+    padding: 0 8px;
+}
+
+notebook > header > tabs > tab {
+    min-height: 32px;
+    padding: 0 16px;
+    background-color: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: @theme_fg_color;
+    font-weight: 500;
+    transition: all 150ms ease-in-out;
+}
+
+notebook > header > tabs > tab:checked {
+    border-bottom: 2px solid @theme_selected_bg_color;
+    color: @theme_selected_bg_color;
+}
+
+notebook > header > tabs > tab:hover {
+    background-color: alpha(@theme_fg_color, 0.05);
+}
+
+/* Combo Boxes */
+combobox {
+    padding: 4px 8px;
+    background-color: @theme_base_color;
+    border: 1px solid @borders;
+    border-radius: 4px;
+}
+
+combobox:disabled {
+    background-color: @insensitive_bg_color;
+    color: @insensitive_fg_color;
+}
+
+combobox box {
+    border: none;
+    background: none;
+}
+
+combobox button {
+    padding: 0 4px;
+    border: none;
+    background: none;
+    box-shadow: none;
+    -gtk-icon-source: -gtk-icontheme("pan-down-symbolic");
+}
+
+/* Spin Buttons */
+spinbutton {
+    padding: 4px 8px;
+    background-color: @theme_base_color;
+    border: 1px solid @borders;
+    border-radius: 4px;
+}
+
+spinbutton entry {
+    padding: 0;
+    border: none;
+    background: none;
+    box-shadow: none;
+}
+
+spinbutton button {
+    padding: 0 4px;
+    border: none;
+    background: none;
+    box-shadow: none;
+}
+
+spinbutton button.up {
+    -gtk-icon-source: -gtk-icontheme("go-up-symbolic");
+}
+
+spinbutton button.down {
+    -gtk-icon-source: -gtk-icontheme("go-down-symbolic");
+}
+
+/* Progress Bars */
+progressbar {
+    min-height: 4px;
+    background-color: @scrollbar_track_color;
+    border-radius: 2px;
+}
+
+progressbar progress {
+    background-color: @theme_selected_bg_color;
+    border-radius: 2px;
+}
+
+progressbar trough {
+    min-height: 4px;
+    background-color: @scrollbar_track_color;
+    border-radius: 2px;
+}
+
+/* Scale / Slider */
+scale {
+    min-height: 24px;
+    min-width: 24px;
+}
+
+scale slider {
+    min-width: 16px;
+    min-height: 16px;
+    margin: -6px;
+    border-radius: 50%;
+    background-color: @theme_selected_bg_color;
+    background-image: none;
+    border: none;
+    box-shadow: 0 1px 3px 1px alpha(black, 0.2);
+}
+
+scale slider:hover {
+    background-color: shade(@theme_selected_bg_color, 1.1);
+}
+
+scale slider:disabled {
+    background-color: @insensitive_fg_color;
+}
+
+scale trough {
+    min-height: 4px;
+    min-width: 4px;
+    border-radius: 2px;
+    background-color: @scrollbar_track_color;
+}
+
+scale trough:disabled {
+    background-color: @insensitive_bg_color;
+}
+
+scale highlight {
+    background-color: @theme_selected_bg_color;
+    border-radius: 2px;
+}
+
+scale highlight:disabled {
+    background-color: @insensitive_fg_color;
+}
+
+/* Tooltips */
+tooltip {
+    padding: 8px 12px;
+    border-radius: 4px;
+    background-color: @tooltip_bg_color;
+    color: @tooltip_fg_color;
+}
+
+tooltip * {
+    background-color: transparent;
+    color: @tooltip_fg_color;
+}
+
+/* Status Bar */
+statusbar {
+    padding: 6px 12px;
+    border-top: 1px solid @borders;
+    background-color: @titlebar_bg_color;
+    color: @theme_fg_color;
+}
+
+statusbar:backdrop {
+    background-color: @unfocused_bg_color;
+    color: @unfocused_fg_color;
+}
+
+/* Info Bars */
+infobar {
+    padding: 6px 12px;
+    border-bottom: 1px solid @borders;
+}
+
+infobar > revealer > box {
+    padding: 0;
+}
+
+infobar .title {
+    font-weight: bold;
+    padding-right: 12px;
+}
+
+infobar > box > label:not(:first-child) {
+    margin-left: 12px;
+}
+
+/* Sidebar */
+.sidebar,
+.sidebar.view,
+.sidebar .view,
+.sidebar > .view {
+    background-color: @sidebar_bg_color;
+    color: @sidebar_fg_color;
+}
+
+.sidebar:backdrop,
+.sidebar.view:backdrop,
+.sidebar .view:backdrop,
+.sidebar > .view:backdrop {
+    background-color: @unfocused_sidebar_bg_color;
+    color: @unfocused_sidebar_fg_color;
+}
+
+.sidebar row:selected,
+.sidebar .view:selected,
+.sidebar row:selected:backdrop,
+.sidebar .view:selected:backdrop {
+    background-color: @theme_selected_bg_color;
+    color: @theme_selected_fg_color;
+}
+
+/* Calendar */
+calendar {
+    padding: 8px;
+    border: 1px solid @borders;
+    background-color: @theme_base_color;
+    color: @theme_text_color;
+}
+
+calendar:selected {
+    background-color: @theme_selected_bg_color;
+    color: @theme_selected_fg_color;
+}
+
+calendar:inconsistent {
+    color: @insensitive_fg_color;
+}
+
+calendar.header {
+    border: none;
+    background-color: @theme_bg_color;
+    color: @theme_fg_color;
+}
+
+calendar.highlight {
+    background-color: @theme_selected_bg_color;
+    color: @theme_selected_fg_color;
+}
+
+calendar:indeterminate {
+    color: alpha(@theme_fg_color, 0.5);
+}
+
+/* Color Chooser */
+colorswatch {
+    background-color: transparent;
+    background-image: none;
+    border-radius: 4px;
+    min-height: 24px;
+    min-width: 24px;
+    margin: 2px;
+    box-shadow: none;
+}
+
+colorswatch:disabled {
+    opacity: 0.5;
+}
+
+colorswatch.color-light {
+    color: rgba(0, 0, 0, 0.3);
+}
+
+colorswatch.color-dark {
+    color: rgba(255, 255, 255, 0.3);
+}
+
+colorswatch:selected,
+colorswatch:active,
+colorswatch:focus {
+    box-shadow: 0 0 0 2px @theme_selected_bg_color;
+}
+
+/* Font Chooser */
+fontchooser {
+    padding: 12px;
+}
+
+fontchooser > box > box.linked > stack > box {
+    padding: 12px;
+}
+
+fontchooser > box > box.linked > stack > box > label {
+    font-weight: bold;
+}
+
+/* File Chooser */
+filechooser {
+    background-color: @theme_bg_color;
+}
+
+filechooser .sidebar {
+    background-color: @sidebar_bg_color;
+    color: @sidebar_fg_color;
+}
+
+filechooser .view {
+    background-color: @theme_base_color;
+    color: @theme_text_color;
+}
+
+filechooser .path-bar {
+    padding: 6px 12px;
+    border-bottom: 1px solid @borders;
+    background-color: @titlebar_bg_color;
+}
+
+filechooser .path-bar > button {
+    margin: 0 1px;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+filechooser .path-bar > button:checked {
+    background-color: @theme_selected_bg_color;
+    color: @theme_selected_fg_color;
+}
+
+filechooser .path-bar > button:disabled {
+    color: @insensitive_fg_color;
+}
+
+filechooser .path-bar > button:not(:first-child) {
+    margin-left: 0;
+}
+
+filechooser .path-bar > button:not(:last-child) {
+    margin-right: 0;
+}
+
+filechooser .path-bar > button:dir(ltr) {
+    margin-right: 1px;
+}
+
+filechooser .path-bar > button:dir(rtl) {
+    margin-left: 1px;
+}
+
+filechooser .path-bar > button:first-child:dir(ltr),
+filechooser .path-bar > button:last-child:dir(rtl) {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+filechooser .path-bar > button:last-child:dir(ltr),
+filechooser .path-bar > button:first-child:dir(rtl) {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+filechooser .path-bar > button:not(:first-child):not(:last-child) {
+    border-radius: 0;
+}
+
+filechooser .path-bar > button:only-child {
+    border-radius: 4px;
+}
+
+filechooser .path-bar > button > box {
+    border-spacing: 4px;
+}
+
+filechooser .path-bar > button > box > arrow {
+    -gtk-icon-source: -gtk-icontheme("pan-end-symbolic");
+    -gtk-icon-transform: scale(0.8);
+    color: inherit;
+    opacity: 0.7;
+}
+
+filechooser .path-bar > button:dir(rtl) > box > arrow {
+    -gtk-icon-source: -gtk-icontheme("pan-end-symbolic-rtl");
+}
+
+filechooser .path-bar > button > box > label {
+    font-weight: normal;
+}
+
+filechooser .path-bar > button:checked > box > label {
+    font-weight: bold;
+}
+
+filechooser .path-bar > button:disabled > box > arrow {
+    opacity: 0.3;
+}
+
+filechooser .path-bar > button:backdrop > box > arrow {
+    opacity: 0.5;
+}
+
+filechooser .path-bar > button:backdrop:disabled > box > arrow {
+    opacity: 0.1;
+}
+
+filechooser .path-bar > button:not(:checked):not(:active):not(:hover) > box > arrow {
+    opacity: 0.5;
+}
+
+filechooser .path-bar > button:not(:checked):not(:active):not(:hover):disabled > box > arrow {
+    opacity: 0.1;
+}
+
+filechooser .path-bar > button:not(:checked):not(:active):not(:hover):backdrop > box > arrow {
+    opacity: 0.3;
+}
+
+filechooser .path-bar > button:not(:checked):not(:active):not(:hover):backdrop:disabled > box > arrow {
+    opacity: 0.1;
+}
+
+filechooser .path-bar > button:not(:checked):not(:active):not(:hover):backdrop:disabled > box > label {
+    color: inherit;
+}
+
+filechooser .path-bar > button:not(:checked):not(:active):not(:hover):backdrop:disabled > box > arrow {
+    opacity: 0.1;
+}
+
+filechooser .path-bar > button:not(:checked):not(:active):not(:hover):backdrop:disabled > box > label {
+    color: inherit;
+}
+
+filechooser .path-bar > button:not(:checked):not(:active):not(:hover):disabled > box > arrow {
+    opacity: 0.1;
+}
+
+filechooser .path-bar > button:not(:checked):not(:active):not(:hover):disabled > box > label {
+    color: inherit;
+}
+
+filechooser .path-bar > button:not(:checked):not(:active):not(:hover):backdrop > box > arrow {
+    opacity: 0.3;
+}
+
+filechooser .path-bar > button:not(:checked):not(:active):not(:hover):backdrop > box > label {
+    color: inherit;
+}
+
+filechooser .path-bar > button:not(:checked):not(:active):not(:hover) > box > label {
+    color: inherit;
+}
+
+filechooser .path-bar > button:not(:checked):not(:active):not(:hover) > box > arrow {
+    opacity: 0.5;
+}
+
+filechooser .path-bar > button:not(:checked):not(:active):not(:hover):disabled > box > arrow {
+    opacity: 0.1;
+}
+
+filechooser .path-bar > button:not(:checked):not(:active):not(:hover):disabled > box > label {
+    color: inherit;
+}
+
+filechooser .path-bar > button:not(:checked):not(:active):not(:hover):backdrop > box > arrow {
+    opacity: 0.3;
+}
+
+filechooser .path-bar > button:not(:checked):not(:active):not(:hover):backdrop > box > label {
+    color: inherit;
+}
+
+filechooser .path-bar > button:not(:checked):not(:active):not(:hover):backdrop:disabled > box > arrow {
+    opacity: 0.1;
+}
+
+filechooser .path-bar > button:not(:checked):not(:active):not(:hover):backdrop:disabled > box > label {
+    color: inherit;
+}
+
+filechooser .path-bar > button:not(:checked):not(:active):not(:hover):disabled > box > arrow {
+    opacity: 0.1;
+}
+
+filechooser .path-bar > button:not(:checked):not(:active):not(:hover):disabled > box > label {
+    color: inherit;
+}
+
+filechooser .path-bar > button:not(:checked):not(:active):not(:hover):backdrop > box > arrow {
+    opacity: 0.3;
+}
+
+filechooser .path-bar > button:not(:checked):not(:active):not(:hover):backdrop > box > label {
+    color: inherit;
+}
+
+filechooser .path-bar > button:not(:checked):not(:active):not(:hover) > box > label {
+    color: inherit;
+}
+
+filechooser .path-bar > button:not(:checked):not(:active):not(:hover) > box > arrow {
+    opacity: 0.5;
+}
+
+filechooser .path-bar > button:not(:checked):not(:active):not(:hover):disabled > box > arrow {
+    opacity: 0.1;
+}
+
+filechooser .path-bar > button:not(:checked):not(:active):not(:hover):disabled > box > label {
+    color: inherit;
+}
+
+filechooser .path-bar > button:not(:checked):not(:active):not(:hover):backdrop > box > arrow {
+    opacity: 0.3;
+}
+
+filechooser .path-bar > button:not(:checked):not(:active):not(:hover):backdrop > box > label {
+    color: inherit;
+}
+
+filechooser .path-bar > button:not(:checked):not(:active):not(:hover):backdrop:disabled > box > arrow {
+    opacity: 0.1;
+}
+
+filechooser .path-bar > button:not(:checked):not(:active):not(:hover):backdrop:disabled > box > label {
+    color: inherit;
+}
