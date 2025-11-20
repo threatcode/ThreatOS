@@ -1,0 +1,81 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "threatos-appmgr"
+version = "0.1.0"
+description = "ThreatOS Application Manager - A framework for managing containerized applications"
+readme = "README.md"
+authors = [
+    {name = "ThreatOS Team", email = "security@threatos.org"}
+]
+license = {text = "GPL-3.0-or-later"}
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Topic :: System :: Systems Administration",
+    "Topic :: Utilities",
+]
+requires-python = ">=3.8"
+dependencies = [
+    "docker>=6.0.0",
+    "PyYAML>=6.0",
+    "click>=8.0.0",
+    "rich>=10.0.0",
+    "typing-extensions>=4.0.0",
+    "python-dotenv>=0.19.0",
+    "jinja2>=3.0.0",
+    "python-gitlab>=3.0.0",
+    "semver>=3.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=3.0.0",
+    "black>=22.0.0",
+    "isort>=5.10.0",
+    "mypy>=0.910",
+    "pylint>=2.12.0",
+    "types-PyYAML>=6.0.0",
+]
+
+[project.scripts]
+threatos-appmgr = "appmgr.cli:cli"
+
+[tool.black]
+line-length = 100
+target-version = ['py38']
+include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_return_any = true
+warn_unreachable = true
+
+[project.urls]
+Homepage = "https://github.com/threatos/ThreatOS"
+Documentation = "https://threatos.github.io/ThreatOS/"
+Repository = "https://github.com/threatos/ThreatOS"
+Issues = "https://github.com/threatos/ThreatOS/issues"
+Changelog = "https://github.com/threatos/ThreatOS/blob/main/CHANGELOG.md"
