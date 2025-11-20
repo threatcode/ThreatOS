@@ -1,0 +1,313 @@
+#!/usr/bin/env bash
+#
+# ThreatOS VM Image Builder
+# Enhanced version with improved error handling and input validation
+#
+# Usage: ./build.sh [options] [-- <debos options>]
+
+# Load common error handling and validation functions
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/scripts/common/error_handling.sh"
+source "${SCRIPT_DIR}/scripts/common/validate_inputs.sh"
+
+# Set strict error handling
+set -o errexit
+set -o nounset
+set -o pipefail
+
+# Global configuration
+readonly VERSION="1.0.0"
+readonly CONFIG_FILE="${SCRIPT_DIR}/build.config"
+
+# Default values with improved documentation
+readonly DEFAULT_ARCH="amd64"
+readonly DEFAULT_BRANCH="threatos-rolling"
+readonly DEFAULT_DESKTOP="xfce"
+readonly DEFAULT_HOSTNAME="threatos"
+readonly DEFAULT_KEYBOARD="us"
+readonly DEFAULT_LOCALE="en_US.UTF-8"
+readonly DEFAULT_MIRROR="https://http.threatos.org/threatos"
+readonly DEFAULT_TIMEZONE="UTC"
+readonly DEFAULT_TOOLSET="default"
+readonly DEFAULT_VARIANT="generic"
+readonly DEFAULT_SIZE=86  # in GB
+
+# Supported values - moved to validate_inputs.sh
+readonly SUPPORTED_ARCHITECTURES="amd64"
+readonly SUPPORTED_BRANCHES="threatos-dev threatos-last-snapshot threatos-rolling"
+readonly SUPPORTED_DESKTOPS="e17 gnome i3 kde lxde mate xfce none"
+readonly SUPPORTED_TOOLSETS="default everything headless large none"
+readonly SUPPORTED_FORMATS="hyperv ova ovf qemu raw vagrant virtualbox vmware"
+readonly SUPPORTED_VARIANTS="generic hyperv qemu rootfs virtualbox vmware"
+
+# Global variables
+ARCH=""
+BRANCH=""
+DESKTOP=""
+FORMAT=""
+HOSTNAME=""
+KEEP=false
+KEYBOARD=""
+LOCALE=""
+MIRROR=""
+PACKAGES=""
+PASSWORD=""
+ROOTFS=""
+SIZE=""
+TIMEZONE=""
+TOOLSET=""
+UEFI=false
+USERNAME=""
+USERPASS=""
+VARIANT=""
+ZIP=false
+
+# Function to display usage information
+show_usage() {
+    cat <<EOF
+ThreatOS VM Image Builder v${VERSION}
+
+Usage: $(basename "$0") [options] [-- <debos options>]
+
+Build a ThreatOS Linux VM image with the specified configuration.
+
+Options:
+  -a, --arch ARCH       Target architecture (default: ${DEFAULT_ARCH})
+  -b, --branch BRANCH   Distribution branch (default: ${DEFAULT_BRANCH})
+  -D, --desktop DE      Desktop environment (default: ${DEFAULT_DESKTOP})
+  -f, --format FORMAT   Output format (default: raw)
+  -h, --help            Show this help message and exit
+  -H, --hostname NAME   System hostname (default: ${DEFAULT_HOSTNAME})
+  -k, --keep            Keep temporary files (default: false)
+  -K, --keyboard LAYOUT Keyboard layout (default: ${DEFAULT_KEYBOARD})
+  -l, --locale LOCALE   System locale (default: ${DEFAULT_LOCALE})
+  -m, --mirror URL      Package repository mirror (default: ${DEFAULT_MIRROR})
+  -p, --packages FILE   Additional packages file
+  -P, --password PASS   User password (default: prompt if not set)
+  -r, --rootfs FILE     Use existing rootfs tarball
+  -s, --size GB         Image size in GB (default: ${DEFAULT_SIZE})
+  -t, --timezone TZ     System timezone (default: ${DEFAULT_TIMEZONE})
+  -T, --toolset SET     Toolset to install (default: ${DEFAULT_TOOLSET})
+  -u, --username USER   Username (default: threatos)
+  -U, --uefi            Enable UEFI boot (default: false)
+  -v, --variant VARIANT Image variant (default: ${DEFAULT_VARIANT})
+  -V, --version         Show version information and exit
+  -z, --zip             Create compressed image (default: false)
+
+Supported architectures: ${SUPPORTED_ARCHITECTURES}
+Supported branches: ${SUPPORTED_BRANCHES}
+Supported desktops: ${SUPPORTED_DESKTOPS}
+Supported formats: ${SUPPORTED_FORMATS}
+Supported variants: ${SUPPORTED_VARIANTS}
+
+Examples:
+  # Build a default VM image
+  $0 -f qemu
+
+  # Build a KDE desktop image with UEFI
+  $0 -D kde -U -f ova
+
+  # Build a custom image with specific settings
+  $0 -a amd64 -b threatos-rolling -D xfce -H myvm -m https://mirror.example.com/threatos \
+     -T default -t America/New_York -K us -l en_US.UTF-8 -f virtualbox
+
+Report bugs to: <support@threatos.org>
+ThreatOS Homepage: <https://www.threatos.org/>
+EOF
+    exit 0
+}
+
+# Function to parse command line arguments
+parse_arguments() {
+    local args=("$@")
+    local debos_args=()
+    local parsing_debos_args=false
+
+    for ((i=0; i<${#args[@]}; i++)); do
+        if [ "${args[i]}" = "--" ]; then
+            parsing_debos_args=true
+            continue
+        fi
+
+        if $parsing_debos_args; then
+            debos_args+=("${args[i]}")
+            continue
+        fi
+
+        case "${args[i]}" in
+            -a|--arch) ARCH="${args[++i]}" ;;
+            -b|--branch) BRANCH="${args[++i]}" ;;
+            -D|--desktop) DESKTOP="${args[++i]}" ;;
+            -f|--format) FORMAT="${args[++i]}" ;;
+            -h|--help) show_usage ;;
+            -H|--hostname) HOSTNAME="${args[++i]}" ;;
+            -k|--keep) KEEP=true ;;
+            -K|--keyboard) KEYBOARD="${args[++i]}" ;;
+            -l|--locale) LOCALE="${args[++i]}" ;;
+            -m|--mirror) MIRROR="${args[++i]}" ;;
+            -p|--packages) PACKAGES="${args[++i]}" ;;
+            -P|--password) PASSWORD="${args[++i]}" ;;
+            -r|--rootfs) ROOTFS="${args[++i]}" ;;
+            -s|--size) SIZE="${args[++i]}" ;;
+            -t|--timezone) TIMEZONE="${args[++i]}" ;;
+            -T|--toolset) TOOLSET="${args[++i]}" ;;
+            -u|--username) USERNAME="${args[++i]}" ;;
+            -U|--uefi) UEFI=true ;;
+            -v|--variant) VARIANT="${args[++i]}" ;;
+            -V|--version) echo "ThreatOS VM Image Builder v${VERSION}"; exit 0 ;;
+            -z|--zip) ZIP=true ;;
+            *) log_error "Unknown option: ${args[i]}"; show_usage ;;
+        esac
+    done
+
+    # Set default values if not provided
+    [ -z "$ARCH" ] && ARCH="$DEFAULT_ARCH"
+    [ -z "$BRANCH" ] && BRANCH="$DEFAULT_BRANCH"
+    [ -z "$DESKTOP" ] && DESKTOP="$DEFAULT_DESKTOP"
+    [ -z "$HOSTNAME" ] && HOSTNAME="$DEFAULT_HOSTNAME"
+    [ -z "$KEYBOARD" ] && KEYBOARD="$DEFAULT_KEYBOARD"
+    [ -z "$LOCALE" ] && LOCALE="$DEFAULT_LOCALE"
+    [ -z "$MIRROR" ] && MIRROR="$DEFAULT_MIRROR"
+    [ -z "$TIMEZONE" ] && TIMEZONE="$DEFAULT_TIMEZONE"
+    [ -z "$TOOLSET" ] && TOOLSET="$DEFAULT_TOOLSET"
+    [ -z "$VARIANT" ] && VARIANT="$DEFAULT_VARIANT"
+    [ -z "$SIZE" ] && SIZE="$DEFAULT_SIZE"
+
+    # Set username and password
+    if [ -z "$USERNAME" ]; then
+        USERNAME="threatos"
+        [ -z "$PASSWORD" ] && PASSWORD="threatos"
+    elif [ -z "$PASSWORD" ]; then
+        # If username is set but password isn't, prompt for it
+        read -s -p "Enter password for user '$USERNAME': " PASSWORD
+        echo
+    fi
+
+    # Set userpass in format username:password
+    USERPASS="${USERNAME}:${PASSWORD}"
+
+    # Set output format if not specified
+    if [ -z "$FORMAT" ]; then
+        case "$VARIANT" in
+            qemu) FORMAT="qcow2" ;;
+            virtualbox) FORMAT="ova" ;;
+            vmware) FORMAT="vmx" ;;
+            hyperv) FORMAT="vhdx" ;;
+            *) FORMAT="raw" ;;
+        esac
+    fi
+
+    # Validate inputs
+    validate_all_inputs
+
+    # Log configuration
+    log_info "Build configuration:"
+    log_info "  Architecture: $ARCH"
+    log_info "  Branch: $BRANCH"
+    log_info "  Desktop: $DESKTOP"
+    log_info "  Format: $FORMAT"
+    log_info "  Hostname: $HOSTNAME"
+    log_info "  Keyboard: $KEYBOARD"
+    log_info "  Locale: $LOCALE"
+    log_info "  Mirror: $MIRROR"
+    log_info "  Timezone: $TIMEZONE"
+    log_info "  Toolset: $TOOLSET"
+    log_info "  Variant: $VARIANT"
+    log_info "  Size: ${SIZE}G"
+    log_info "  UEFI: $UEFI"
+    log_info "  Keep temporary files: $KEEP"
+    log_info "  Create ZIP: $ZIP"
+
+    return 0
+}
+
+# Main function
+main() {
+    # Parse command line arguments
+    parse_arguments "$@"
+
+    # Check if running as root
+    if [ "$(id -u)" -ne 0 ]; then
+        log_error "This script must be run as root"
+        exit 1
+    fi
+
+    # Check for required commands
+    local required_commands=("debootstrap" "qemu-img" "parted" "mkfs.ext4" "mkfs.vfat" "mkswap" "mount" "umount" "chroot" "tar" "gzip" "bzip2" "xz" "wget" "curl")
+    for cmd in "${required_commands[@]}"; do
+        if ! command -v "$cmd" >/dev/null 2>&1; then
+            log_error "Required command not found: $cmd"
+            exit 1
+        fi
+    done
+
+    # Check for debos
+    if ! command -v debos >/dev/null 2>&1; then
+        log_error "Debos is required but not installed. Please install it first."
+        log_info "See https://github.com/go-debos/debos for installation instructions."
+        exit 1
+    fi
+
+    # Create build directory
+    local build_dir="${SCRIPT_DIR}/build"
+    mkdir -p "$build_dir"
+
+    # Build the image
+    log_info "Starting ThreatOS VM image build..."
+    
+    # Set debos command line arguments
+    local debos_cmd=("debos")
+    
+    # Add common arguments
+    debos_cmd+=("-v" "--show-boot")
+    
+    # Add architecture
+    debos_cmd+=("--architecture" "$ARCH")
+    
+    # Add variables
+    debos_cmd+=(
+        "-t" "arch:$ARCH"
+        "-t" "branch:$BRANCH"
+        "-t" "desktop:$DESKTOP"
+        "-t" "format:$FORMAT"
+        "-t" "hostname:$HOSTNAME"
+        "-t" "keyboard:$KEYBOARD"
+        "-t" "locale:$LOCALE"
+        "-t" "mirror:$MIRROR"
+        "-t" "size:${SIZE}G"
+        "-t" "timezone:$TIMEZONE"
+        "-t" "toolset:$TOOLSET"
+        "-t" "userpass:$USERPASS"
+        "-t" "variant:$VARIANT"
+    )
+    
+    # Add conditional variables
+    $KEEP && debos_cmd+=("-t" "keep:true")
+    $UEFI && debos_cmd+=("-t" "uefi:true")
+    $ZIP && debos_cmd+=("-t" "zip:true")
+    
+    # Add rootfs if specified
+    if [ -n "$ROOTFS" ]; then
+        debos_cmd+=("-t" "rootfs:$ROOTFS")
+    fi
+    
+    # Add debos arguments
+    if [ ${#debos_args[@]} -gt 0 ]; then
+        debos_cmd+=("--" "${debos_args[@]}")
+    fi
+    
+    # Add the main recipe
+    debos_cmd+=("${SCRIPT_DIR}/main.yaml")
+    
+    # Execute the command
+    log_info "Executing: ${debos_cmd[*]}"
+    "${debos_cmd[@]}"
+    
+    log_info "Build completed successfully!"
+    return 0
+}
+
+# Only run main if not being sourced
+if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
+    main "$@"
+fi
