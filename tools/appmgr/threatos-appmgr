@@ -3,13 +3,30 @@
 # A framework for managing containerized applications on ThreatOS
 
 set -euo pipefail
+shopt -s nullglob
 
-# Default configuration
-CONFIG_DIR="/etc/threatos/apps"
-LOG_DIR="/var/log/threatos/apps"
-DATA_DIR="/var/lib/threatos/apps"
-BIN_DIR="/usr/local/bin"
-COMPOSE_CMD="docker-compose"
+# Load configuration from environment or use defaults
+: "${THREATOS_CONFIG_DIR:=/etc/threatos/apps}"
+: "${THREATOS_LOG_DIR:=/var/log/threatos/apps}"
+: "${THREATOS_DATA_DIR:=/var/lib/threatos/apps}"
+: "${THREATOS_BIN_DIR:=/usr/local/bin}"
+
+# Configuration paths
+readonly CONFIG_DIR="$THREATOS_CONFIG_DIR"
+readonly LOG_DIR="$THREATOS_LOG_DIR"
+readonly DATA_DIR="$THREATOS_DATA_DIR"
+readonly BIN_DIR="$THREATOS_BIN_DIR"
+readonly LOCK_FILE="/var/lock/threatos-appmgr.lock"
+
+# Detect Docker Compose command
+if docker compose version &>/dev/null; then
+    readonly COMPOSE_CMD="docker compose"
+elif command -v docker-compose &>/dev/null; then
+    readonly COMPOSE_CMD="docker-compose"
+else
+    echo "ERROR: Neither 'docker compose' plugin nor 'docker-compose' binary found" >&2
+    exit 1
+fi
 
 # Colors for output
 RED='\033[0;31m'
@@ -20,34 +37,108 @@ NC='\033[0m' # No Color
 # Check if running as root
 check_root() {
     if [ "$(id -u)" -ne 0 ]; then
-        echo -e "${RED}Error: This script must be run as root${NC}" >&2
+        echo -e "${RED}ERROR: This script must be run as root${NC}" >&2
         exit 1
     fi
 }
 
-# Check if Docker is installed
+# Check if Docker is installed and running
 check_docker() {
     if ! command -v docker &> /dev/null; then
-        echo -e "${RED}Error: Docker is not installed${NC}" >&2
+        echo -e "${RED}ERROR: Docker is not installed${NC}" >&2
+        echo "Please install Docker first: https://docs.docker.com/engine/install/" >&2
         exit 1
     fi
     
-    if ! command -v docker-compose &> /dev/null; then
-        echo -e "${YELLOW}Warning: docker-compose not found, using docker compose plugin${NC}"
-        COMPOSE_CMD="docker compose"
+    if ! docker info &> /dev/null; then
+        echo -e "${RED}ERROR: Docker daemon is not running${NC}" >&2
+        echo "Please start the Docker service and try again" >&2
+        exit 1
     fi
 }
+
+# Validate compose file
+validate_compose_file() {
+    local compose_file="$1"
+    
+    if [ ! -f "$compose_file" ]; then
+        echo -e "${RED}ERROR: Compose file not found: $compose_file${NC}" >&2
+        return 1
+    fi
+    
+    if ! $COMPOSE_CMD -f "$compose_file" config -q 2>/dev/null; then
+        echo -e "${RED}ERROR: Invalid Docker Compose file: $compose_file${NC}" >&2
+        $COMPOSE_CMD -f "$compose_file" config
+        return 1
+    fi
+    
+    return 0
+}
+
+# Setup logging
+setup_logging() {
+    local app_name="${1:-system}"
+    local log_file="${LOG_DIR}/${app_name}.log"
+    
+    mkdir -p "$(dirname "$log_file")"
+    exec >> "$log_file" 2>&1
+}
+
+# Acquire lock
+acquire_lock() {
+    exec 200>"$LOCK_FILE"
+    if ! flock -n 200; then
+        echo -e "${YELLOW}Another instance is already running. Waiting for lock...${NC}" >&2
+        if ! flock 200; then
+            echo -e "${RED}ERROR: Failed to acquire lock${NC}" >&2
+            exit 1
+        fi
+    fi
+    echo "$$" >&200
+}
+
+# Release lock
+release_lock() {
+    rm -f "$LOCK_FILE"
+}
+
+# Cleanup on exit
+cleanup() {
+    local exit_code=$?
+    release_lock
+    exit $exit_code
+}
+
+trap cleanup EXIT
 
 # Initialize the application manager
 init() {
     echo -e "${GREEN}Initializing ThreatOS Application Manager...${NC}"
     
-    # Create required directories
-    mkdir -p "$CONFIG_DIR"
-    mkdir -p "$LOG_DIR"
-    mkdir -p "$DATA_DIR"
+    # Create required directories with proper permissions
+    for dir in "$CONFIG_DIR" "$LOG_DIR" "$DATA_DIR" "$(dirname "$LOCK_FILE")"; do
+        if [ ! -d "$dir" ]; then
+            mkdir -p "$dir" || {
+                echo -e "${RED}ERROR: Failed to create directory: $dir${NC}" >&2
+                return 1
+            }
+            chmod 750 "$dir"
+            chown root:docker "$dir" || true
+        fi
+    done
     
-    # Set proper permissions
+    # Ensure log directory is writable
+    chmod 775 "$LOG_DIR"
+    
+    # Create docker network if it doesn't exist
+    if ! docker network inspect threatos-apps &>/dev/null; then
+        echo -e "${GREEN}Creating threatos-apps network...${NC}"
+        if ! docker network create --driver=bridge --subnet=172.18.0.0/16 threatos-apps; then
+            echo -e "${YELLOW}Warning: Failed to create threatos-apps network${NC}" >&2
+        fi
+    fi
+    
+    echo -e "${GREEN}ThreatOS Application Manager initialized successfully${NC}"
     chmod 755 "$CONFIG_DIR"
     chmod 755 "$LOG_DIR"
     chmod 755 "$DATA_DIR"
@@ -57,7 +148,62 @@ init() {
 
 # Install an application
 install_app() {
+    if [ $# -lt 2 ]; then
+        echo -e "${RED}Usage: $0 install <app_name> <compose_file> [options]${NC}" >&2
+        return 1
+    fi
+    
     local app_name="$1"
+    local compose_file="$2"
+    shift 2
+    
+    # Validate app name
+    if ! [[ "$app_name" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+        echo -e "${RED}ERROR: Invalid application name. Only alphanumeric, dashes and underscores are allowed.${NC}" >&2
+        return 1
+    fi
+    
+    # Validate compose file
+    if ! validate_compose_file "$compose_file"; then
+        return 1
+    fi
+    
+    local app_dir="${CONFIG_DIR}/${app_name}"
+    local app_data_dir="${DATA_DIR}/${app_name}"
+    local app_log_dir="${LOG_DIR}/${app_name}"
+    
+    echo -e "${GREEN}Installing application: $app_name${NC}"
+    
+    # Create required directories
+    for dir in "$app_dir" "$app_data_dir" "$app_log_dir"; do
+        mkdir -p "$dir" || {
+            echo -e "${RED}ERROR: Failed to create directory: $dir${NC}" >&2
+            return 1
+        }
+        chmod 750 "$dir"
+    done
+    
+    # Copy compose file
+    if ! cp "$compose_file" "${app_dir}/docker-compose.yml"; then
+        echo -e "${RED}ERROR: Failed to copy compose file${NC}" >&2
+        return 1
+    fi
+    
+    # Create .env file if it doesn't exist
+    if [ ! -f "${app_dir}/.env" ]; then
+        echo -e "# Environment variables for ${app_name}" > "${app_dir}/.env"
+        echo "APP_NAME=${app_name}" >> "${app_dir}/.env"
+        echo "APP_DATA_DIR=${app_data_dir}" >> "${app_dir}/.env"
+        echo "APP_LOG_DIR=${app_log_dir}" >> "${app_dir}/.env"
+    fi
+    
+    # Start the application
+    if ! start_app "$app_name"; then
+        echo -e "${YELLOW}Warning: Application installed but failed to start${NC}" >&2
+        return 1
+    fi
+    
+    echo -e "${GREEN}Application '$app_name' installed and started successfully${NC}"
     local compose_file="${2:-docker-compose.yml}"
     
     echo -e "${GREEN}Installing application: ${app_name}${NC}"
@@ -96,7 +242,60 @@ EOF
 
 # Uninstall an application
 uninstall_app() {
+    if [ $# -lt 1 ]; then
+        echo -e "${RED}Usage: $0 uninstall <app_name> [--force]${NC}" >&2
+        return 1
+    fi
+    
     local app_name="$1"
+    local force=false
+    
+    # Check for --force flag
+    if [ "$#" -gt 1 ] && [ "$2" = "--force" ]; then
+        force=true
+    fi
+    
+    local app_dir="${CONFIG_DIR}/${app_name}"
+    local app_data_dir="${DATA_DIR}/${app_name}"
+    
+    # Check if app exists
+    if [ ! -d "$app_dir" ]; then
+        echo -e "${RED}ERROR: Application '$app_name' not found${NC}" >&2
+        return 1
+    fi
+    
+    # Stop the application if running
+    if is_app_running "$app_name"; then
+        echo -e "${YELLOW}Stopping application '$app_name'...${NC}"
+        if ! stop_app "$app_name"; then
+            if [ "$force" = false ]; then
+                echo -e "${RED}ERROR: Failed to stop application. Use --force to remove anyway.${NC}" >&2
+                return 1
+            fi
+            echo -e "${YELLOW}Force removing despite stop failure...${NC}"
+        fi
+    fi
+    
+    # Remove application files
+    echo -e "Removing application files..."
+    rm -rf "$app_dir"
+    
+    # Ask about removing data
+    if [ -d "$app_data_dir" ]; then
+        if [ "$force" = true ]; then
+            rm -rf "$app_data_dir"
+        else
+            read -p "Do you want to remove application data at '$app_data_dir'? [y/N] " -n 1 -r
+            echo
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                rm -rf "$app_data_dir"
+            else
+                echo -e "${YELLOW}Application data kept at: $app_data_dir${NC}"
+            fi
+        fi
+    fi
+    
+    echo -e "${GREEN}Application '$app_name' has been uninstalled${NC}"
     local app_dir="$CONFIG_DIR/$app_name"
     
     if [ ! -d "$app_dir" ]; then
@@ -128,6 +327,69 @@ uninstall_app() {
     fi
     
     echo -e "${GREEN}Application '${app_name}' uninstalled successfully${NC}"
+}
+
+# Check if application is running
+is_app_running() {
+    local app_name="$1"
+    local app_dir="${CONFIG_DIR}/${app_name}"
+    
+    if [ ! -f "${app_dir}/docker-compose.yml" ]; then
+        return 1
+    fi
+    
+    # Check if any containers are running for this app
+    if $COMPOSE_CMD -f "${app_dir}/docker-compose.yml" ps --services 2>/dev/null | grep -q .; then
+        return 0
+    fi
+    
+    return 1
+}
+
+# Start an application
+start_app() {
+    local app_name="$1"
+    local app_dir="${CONFIG_DIR}/${app_name}"
+    
+    if [ ! -f "${app_dir}/docker-compose.yml" ]; then
+        echo -e "${RED}ERROR: Application '$app_name' not found${NC}" >&2
+        return 1
+    fi
+    
+    echo -e "${GREEN}Starting application: $app_name${NC}"
+    
+    # Pull latest images
+    if ! $COMPOSE_CMD -f "${app_dir}/docker-compose.yml" pull; then
+        echo -e "${YELLOW}Warning: Failed to pull some images${NC}" >&2
+    fi
+    
+    # Start the application
+    if ! $COMPOSE_CMD -f "${app_dir}/docker-compose.yml" up -d; then
+        echo -e "${RED}ERROR: Failed to start application '$app_name'${NC}" >&2
+        return 1
+    fi
+    
+    echo -e "${GREEN}Application '$app_name' started successfully${NC}" 
+}
+
+# Stop an application
+stop_app() {
+    local app_name="$1"
+    local app_dir="${CONFIG_DIR}/${app_name}"
+    
+    if [ ! -f "${app_dir}/docker-compose.yml" ]; then
+        echo -e "${RED}ERROR: Application '$app_name' not found${NC}" >&2
+        return 1
+    fi
+    
+    echo -e "${YELLOW}Stopping application: $app_name${NC}"
+    
+    if ! $COMPOSE_CMD -f "${app_dir}/docker-compose.yml" down; then
+        echo -e "${RED}ERROR: Failed to stop application '$app_name'${NC}" >&2
+        return 1
+    fi
+    
+    echo -e "${GREEN}Application '$app_name' stopped successfully${NC}"
 }
 
 # List installed applications
