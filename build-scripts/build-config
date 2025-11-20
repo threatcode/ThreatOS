@@ -14,7 +14,7 @@ BUILD_MIRROR_SECURITY="http://security.debian.org/"
 BUILD_KERNEL_PACKAGE="linux-image-amd64"
 BUILD_KERNEL_CMDLINE="boot=live components splash quiet"
 
-BUILD_OPTIONS=(--arch "${BUILD_ARCH}"
+BUILD_OPTIONS=(--architecture "${BUILD_ARCH}"
                --distribution "${BUILD_DISTRIBUTION}"
                --mirror-bootstrap "${BUILD_MIRROR}"
                --mirror-chroot "${BUILD_MIRROR}"
