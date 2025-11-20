@@ -1,0 +1,27 @@
+# ThreatOS Installer Configuration
+
+# System Configuration
+HOSTNAME="threatos"
+TIMEZONE="UTC"
+LOCALE="en_US.UTF-8"
+KEYBOARD_LAYOUT="us"
+
+# User Configuration
+DEFAULT_USERNAME="threatuser"
+DEFAULT_PASSWORD="threatpass"  # Should be changed after installation
+
+# Disk Configuration
+AUTO_PARTITION=true
+ENCRYPT_DISK=false
+
+# Network Configuration
+ENABLE_NETWORK=true
+CONFIGURE_NETWORK=true
+
+# Package Configuration
+INSTALL_ESSENTIAL=true
+INSTALL_TOOLS=true
+INSTALL_DESKTOP=false
+
+# Post-Install Scripts
+RUN_POST_INSTALL=true
