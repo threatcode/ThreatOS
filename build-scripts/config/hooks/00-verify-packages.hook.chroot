@@ -1,0 +1,11 @@
+#!/bin/sh
+set -e
+
+echo "[+] Verifying package integrity..."
+apt-get update
+apt-get install -y debsums
+debsums_init
+if ! debsums -s; then
+    echo "ERROR: Package verification failed!"
+    exit 1
+fi

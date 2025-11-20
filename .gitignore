@@ -80,6 +80,11 @@ local-settings.*
 .chroot/
 .cache/
 .livebuild/
+# Allow hook files in config/hooks directory
+!config/hooks/
+!config/hooks/*.hook.chroot
+!config/hooks/00-verify-packages.hook.chroot
+# But ignore hook files in other directories
 *.hook.chroot
 
 # Keys and secrets
