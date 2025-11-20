@@ -13,14 +13,14 @@ REQUIRED_PACKAGES=(
     "isolinux"
     "syslinux"
     "syslinux-efi"
-    "grub-pc"
     "grub-efi-amd64"
-    "grub-efi-ia32"
     "grub-common"
     "grub2-common"
     "mtools"
     "xorriso"
     "wget"
+    "git"
+    "ca-certificates"
 )
 
 # Check each package
