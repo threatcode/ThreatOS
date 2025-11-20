@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  threatos-builder:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: threatos-builder
+    volumes:
+      - ..:/threatos
+      - build-cache:/var/cache/apt
+      - build-cache:/var/lib/apt/lists
+    working_dir: /threatos
+    tty: true
+    privileged: true
+    environment:
+      - DEBIAN_FRONTEND=noninteractive
+    cap_add:
+      - SYS_ADMIN
+
+volumes:
+  build-cache:

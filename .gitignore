@@ -16,14 +16,10 @@
 
 # Docker - Ignore in root, but allow in docker/
 .dockerignore
-!/docker/Dockerfile*
-!docker/docker-compose*
 !docker/*.sh
 !docker/.editorconfig
 !docker/.shellcheckrc
 # Ignore root level Docker files
-Dockerfile*
-docker-compose*
 
 # Python
 __pycache__/

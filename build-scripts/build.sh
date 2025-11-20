@@ -17,7 +17,7 @@ echo "[+] Initializing live-build configuration..."
 lb clean --purge
 
 # Apply build configuration
-eval "${BUILD_CMD}"
+lb config "${BUILD_OPTIONS[@]}"
 
 # Copy package lists
 for pkg_list in ${PACKAGE_LISTS}; do

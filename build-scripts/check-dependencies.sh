@@ -13,7 +13,6 @@ REQUIRED_PACKAGES=(
     "isolinux"
     "syslinux"
     "syslinux-efi"
-    "grub-efi-amd64"
     "grub-common"
     "grub2-common"
     "mtools"
