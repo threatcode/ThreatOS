@@ -1,0 +1,190 @@
+{
+    "name": "ThreatOS Development Environment",
+    "build": {
+        "dockerfile": "Dockerfile",
+        "context": "..",
+        "args": {
+            "VARIANT": "bookworm",
+            "INSTALL_ZSH": "true",
+            "UPGRADE_PACKAGES": "true"
+        }
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                // Remote Development
+                "ms-vscode-remote.remote-containers",
+                "ms-vscode-remote.remote-ssh",
+                "ms-vscode-remote.remote-ssh-edit",
+                
+                // Shell & Terminal
+                "ms-vscode.powershell",
+                "ms-azuretools.vscode-docker",
+                "vscode-icons-team.vscode-icons",
+                "eamodio.gitlens",
+                
+                // Languages & Frameworks
+                "ms-vscode.cpptools",
+                "redhat.vscode-yaml",
+                "ms-python.python",
+                "golang.go",
+                "rust-lang.rust-analyzer",
+                "tamasfe.even-better-toml",
+                "hashicorp.terraform",
+                "redhat.ansible",
+                "ms-kubernetes-tools.vscode-kubernetes-tools",
+                
+                // Productivity
+                "editorconfig.editorconfig",
+                "github.vscode-github-actions",
+                "github.copilot",
+                "github.copilot-chat",
+                "streetsidesoftware.code-spell-checker",
+                "usernamehw.errorlens",
+                "gruntfuggly.todo-tree",
+                "wayou.vscode-todo-highlight",
+                "mikestead.dotenv",
+                "waderyan.gitblame",
+                "esbenp.prettier-vscode",
+                "dbaeumer.vscode-eslint",
+                "stylelint.vscode-stylelint",
+                "shd101wyy.markdown-preview-enhanced"
+            ],
+            "settings": {
+                "terminal.integrated.defaultProfile.linux": "zsh",
+                "terminal.integrated.fontFamily": "'Fira Code', 'Droid Sans Mono', 'monospace', 'PowerlineSymbols'",
+                "terminal.integrated.fontSize": 14,
+                "terminal.integrated.cursorStyle": "line",
+                "terminal.integrated.cursorBlinking": true,
+                "terminal.integrated.scrollback": 10000,
+                "editor.fontFamily": "'Fira Code', 'Droid Sans Mono', 'monospace', 'PowerlineSymbols'",
+                "editor.fontLigatures": true,
+                "editor.fontSize": 14,
+                "editor.lineHeight": 24,
+                "editor.tabSize": 4,
+                "editor.insertSpaces": true,
+                "editor.detectIndentation": true,
+                "editor.renderWhitespace": "selection",
+                "editor.renderControlCharacters": true,
+                "editor.minimap.enabled": true,
+                "editor.bracketPairColorization.enabled": true,
+                "editor.guides.bracketPairs": true,
+                "files.autoSave": "afterDelay",
+                "files.autoSaveDelay": 1000,
+                "files.eol": "\n",
+                "files.trimTrailingWhitespace": true,
+                "files.insertFinalNewline": true,
+                "files.trimFinalNewlines": true,
+                "explorer.confirmDelete": false,
+                "explorer.confirmDragAndDrop": false,
+                "workbench.colorTheme": "Default Dark+",
+                "workbench.iconTheme": "vscode-icons",
+                "workbench.startupEditor": "welcomePage",
+                "workbench.editor.enablePreview": false,
+                "workbench.editor.enablePreviewFromQuickOpen": false,
+                "workbench.editor.highlightModifiedTabs": true,
+                "git.confirmSync": false,
+                "git.enableSmartCommit": true,
+                "git.autofetch": true,
+                "git.autoStash": true,
+                "gitlens.codeLens.enabled": true,
+                "gitlens.hovers.currentLine.over": "line",
+                "gitlens.hovers.currentLine.scrollable": true,
+                "python.linting.enabled": true,
+                "python.linting.pylintEnabled": true,
+                "python.linting.flake8Enabled": true,
+                "python.linting.mypyEnabled": true,
+                "python.formatting.provider": "black",
+                "python.languageServer": "Pylance",
+                "python.analysis.typeCheckingMode": "basic",
+                "python.analysis.autoImportCompletions": true,
+                "yaml.schemas": {
+                    "kubernetes": "/*.yaml",
+                    "https://json.schemastore.org/github-workflow.json": "/.github/workflows/*.yaml"
+                },
+                "yaml.format.enable": true,
+                "yaml.validate": true,
+                "yaml.completion": true,
+                "yaml.hover": true,
+                "yaml.schemaStore.enable": true,
+                "[yaml]": {
+                    "editor.defaultFormatter": "redhat.vscode-yaml"
+                },
+                "[json]": {
+                    "editor.defaultFormatter": "esbenp.prettier-vscode"
+                },
+                "[markdown]": {
+                    "editor.defaultFormatter": "yzhang.markdown-all-in-one"
+                },
+                "[dockerfile]": {
+                    "editor.defaultFormatter": "ms-azuretools.vscode-docker"
+                },
+                "terminal.integrated.shellIntegration.enabled": true,
+                "terminal.integrated.shellIntegration.history": 10000,
+                "terminal.integrated.shellIntegration.showWelcome": false,
+                "terminal.integrated.shellIntegration.commandsToSkipShell": [
+                    "workbench.action.terminal.runActiveFile"
+                ]
+            }
+        }
+    },
+    "forwardPorts": [
+        // Add any ports you want to forward here
+    ],
+    "mounts": [
+        "source=${localEnv:HOME}/.ssh,target=/home/threatdev/.ssh,type=bind,consistency=cached",
+        "source=${localEnv:HOME}/.gitconfig,target=/home/threatdev/.gitconfig,type=bind,consistency=cached",
+        "source=${localEnv:HOME}/.gnupg,target=/home/threatdev/.gnupg,type=bind,consistency=cached"
+    ],
+    "postCreateCommand": "git config --global --add safe.directory /workspace && pre-commit install && git lfs install",
+    "remoteUser": "threatdev",
+    "remoteEnv": {
+        "PATH": "/home/threatdev/.local/bin:${containerEnv:PATH}",
+        "SHELL": "/bin/zsh"
+    },
+    "features": {
+        "ghcr.io/devcontainers/features/common-utils:2": {
+            "installZsh": true,
+            "username": "threatdev",
+            "uid": "1000",
+            "gid": "1000",
+            "installOhMyZsh": true,
+            "upgradePackages": true
+        },
+        "ghcr.io/devcontainers/features/git:1": {
+            "version": "latest",
+            "ppaLorDeb": true
+        },
+        "ghcr.io/devcontainers/features/github-cli:1": {
+            "version": "latest"
+        },
+        "ghcr.io/devcontainers/features/docker-in-docker:2": {
+            "version": "20.10",
+            "moby": true
+        },
+        "ghcr.io/devcontainers/features/desktop-lite:1": {
+            "noVncVersion": "latest",
+            "password": "threatos",
+            "webPort": "6080",
+            "vncPort": "5901"
+        }
+    },
+    "runArgs": [
+        "--cap-add=SYS_ADMIN",
+        "--cap-add=NET_ADMIN",
+        "--security-opt",
+        "seccomp=unconfined",
+        "--security-opt",
+        "apparmor=unconfined",
+        "--device=/dev/kvm",
+        "--device=/dev/net/tun",
+        "--shm-size=2g"
+    ],
+    "containerEnv": {
+        "DEBIAN_FRONTEND": "noninteractive",
+        "SHELL": "/bin/zsh"
+    },
+    "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
+    "workspaceFolder": "/workspace",
+    "shutdownAction": "stopContainer"
+}

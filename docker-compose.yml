@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  dev:
+    build:
+      context: .
+      dockerfile: .devcontainer/Dockerfile
+    container_name: threatos-dev
+    volumes:
+      - .:/workspace
+      - ${HOME}/.ssh:/home/threatdev/.ssh:ro
+      - ${HOME}/.gitconfig:/home/threatdev/.gitconfig:ro
+    environment:
+      - DEBIAN_FRONTEND=noninteractive
+    working_dir: /workspace
+    tty: true
+    stdin_open: true
+    user: threatdev
+    privileged: true  # Required for some build operations
+    cap_add:
+      - SYS_ADMIN  # Required for chroot and other low-level operations
+
+  # Add additional services as needed
+  # build-cache:
+  #   image: registry:2
+  #   ports:
+  #     - "5000:5000"
+  #   volumes:
+  #     - build-cache:/var/lib/registry
+
+# volumes:
+#   build-cache:
+#     driver: local

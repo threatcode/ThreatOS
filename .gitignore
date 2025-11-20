@@ -82,10 +82,14 @@ local-settings.*
 .livebuild/
 # Allow hook files in config/hooks directory
 !config/hooks/
-# Explicitly include our hook file
+# Explicitly include our hook files
 !config/hooks/00-verify-packages.hook.chroot
+!config/hooks/01*.hook.chroot
 # Allow other .hook.chroot files in config/hooks
 !config/hooks/*.hook.chroot
+# Allow installer hooks
+!installer/hooks/
+!installer/hooks/*.hook.chroot
 # But ignore hook files in other directories
 *.hook.chroot
 
