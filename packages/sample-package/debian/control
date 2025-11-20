@@ -1,0 +1,15 @@
+Source: sample-package
+Maintainer: ThreatOS Team <team@threatos.org>
+Section: misc
+Priority: optional
+Standards-Version: 4.5.0
+Build-Depends: debhelper-compat (= 12)
+
+Package: sample-package
+Architecture: all
+Depends: ${misc:Depends}
+Description: A sample package for testing upstream-watch
+ This is a test package to demonstrate the GitHub repository extraction.
+Homepage: https://github.com/example/sample-repo
+Vcs-Git: https://github.com/example/sample-repo.git
+Vcs-Browser: https://github.com/example/sample-repo

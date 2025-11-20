@@ -1,0 +1,14 @@
+Source: another-package
+Maintainer: ThreatOS Team <team@threatos.org>
+Section: utils
+Priority: optional
+Standards-Version: 4.5.0
+Build-Depends: debhelper-compat (= 12)
+
+Package: another-package
+Architecture: all
+Depends: ${misc:Depends}
+Description: Another sample package for testing
+ This is another test package to demonstrate multiple package handling.
+Homepage: https://github.com/example/another-repo
+Vcs-Git: https://github.com/example/another-repo.git

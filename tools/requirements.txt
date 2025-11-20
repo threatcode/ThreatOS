@@ -1,0 +1,17 @@
+# Core dependencies
+requests>=2.25.1
+PyGithub>=1.55
+gitpython>=3.1.14
+python-dotenv>=0.15.0
+pyyaml>=5.4.1
+
+# Development dependencies
+pytest>=6.2.2
+pytest-cov>=2.11.1
+black>=21.5b2
+mypy>=0.812
+flake8>=3.9.1
+
+# Documentation
+sphinx>=3.5.3
+sphinx-rtd-theme>=0.5.1

@@ -1,0 +1,129 @@
+#!/bin/bash
+# Generate a list of GitHub repositories from the ThreatOS packages
+# This script extracts GitHub repository information from the ThreatOS packages
+# and generates a package list that can be used by upstream-watch
+
+set -e
+
+# Get the directory of this script
+SCRIPT_DIR="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
+THREATOS_ROOT="${SCRIPT_DIR}/../../"
+OUTPUT_FILE="${SCRIPT_DIR}/github-package-list"
+TEMP_DIR=$(mktemp -d)
+trap 'rm -rf "${TEMP_DIR}"' EXIT
+
+# Check if required tools are installed
+check_dependencies() {
+    local missing=()
+    
+    for cmd in jq curl git; do
+        if ! command -v "$cmd" &> /dev/null; then
+            missing+=("$cmd")
+        fi
+    done
+    
+    if [ ${#missing[@]} -gt 0 ]; then
+        echo "The following required tools are missing:"
+        for cmd in "${missing[@]}"; do
+            echo "  - $cmd"
+        done
+        echo ""
+        echo "Install them with:"
+        echo "  sudo apt update && sudo apt install -y ${missing[*]}"
+        return 1
+    fi
+    return 0
+}
+
+# Extract GitHub repository information from package control files
+extract_github_repos() {
+    echo "Scanning for GitHub repositories in packages..."
+    echo "Looking for packages in: ${THREATOS_ROOT}/packages/"
+    
+    # Debug: List all package directories
+    echo "Found package directories:"
+    find "${THREATOS_ROOT}/packages" -mindepth 1 -maxdepth 1 -type d | while read -r pkg_dir; do
+        echo "- $pkg_dir"
+    done
+    
+    # Clear output file
+    > "${OUTPUT_FILE}"
+    
+    # Find all package directories
+    find "${THREATOS_ROOT}/packages" -mindepth 1 -maxdepth 1 -type d | while read -r pkg_dir; do
+        local pkg_name=$(basename "${pkg_dir}")
+        local control_file="${pkg_dir}/debian/control"
+        
+        echo "\nProcessing package: ${pkg_name}"
+        echo "Control file: ${control_file}"
+        
+        # Check if this is a Debian package with a control file
+        if [ -f "${control_file}" ]; then
+            echo "Found control file. Contents:"
+            cat "${control_file}" | sed 's/^/  /'
+            echo ""
+            # Look for Homepage or VCS fields that point to GitHub
+            local homepage=$(grep -i '^Homepage:' "${control_file}" | head -1 | sed -E 's/^[^:]+:[[:space:]]*//i' || true)
+            local vcs_browser=$(grep -i '^Vcs-Browser:' "${control_file}" | head -1 | sed -E 's/^[^:]+:[[:space:]]*//i' || true)
+            local vcs_git=$(grep -i '^Vcs-Git:' "${control_file}" | head -1 | sed -E 's/^[^:]+:[[:space:]]*//i' || true)
+            
+            # Debug output
+            echo "  - Homepage: ${homepage:-Not found}"
+            echo "  - VCS-Browser: ${vcs_browser:-Not found}"
+            echo "  - VCS-Git: ${vcs_git:-Not found}"
+            
+            # Extract GitHub repository URL
+            local github_url=""
+            
+            for url in "$homepage" "$vcs_browser" "$vcs_git"; do
+                if [ -n "$url" ]; then
+                    # Extract owner/repo using grep and sed for better compatibility
+                    local repo_path=$(echo "$url" | grep -o 'github\.com[/:][^/]\+/[^/]\+' | head -1 | sed -E 's/.*[:/]([^/]+\/[^/]+)$/\1/')
+                    
+                    if [ -n "$repo_path" ]; then
+                        # Remove .git if present
+                        repo_path="${repo_path%.git}"
+                        github_url="https://github.com/$repo_path"
+                        echo "  ✓ Found GitHub repository: $github_url"
+                        break
+                    fi
+                fi
+            done
+            
+            # If we found a GitHub URL, add it to the list
+            if [ -n "$github_url" ]; then
+                echo "$pkg_name $github_url" | tee -a "${OUTPUT_FILE}" >/dev/null
+            else
+                echo "  ✗ No GitHub repository found"
+            fi
+        fi
+    done
+    
+    # Sort and deduplicate the list
+    sort -u "${OUTPUT_FILE}" > "${OUTPUT_FILE}.tmp"
+    mv "${OUTPUT_FILE}.tmp" "${OUTPUT_FILE}"
+    
+    echo ""
+    echo "Generated GitHub package list with $(wc -l < "${OUTPUT_FILE}") packages"
+    echo "Output file: ${OUTPUT_FILE}"
+}
+
+# Main function
+main() {
+    echo "=== ThreatOS GitHub Package List Generator ==="
+    echo "This script generates a list of GitHub repositories from ThreatOS packages."
+    echo ""
+    
+    # Check dependencies
+    if ! check_dependencies; then
+        exit 1
+    fi
+    
+    # Extract GitHub repositories
+    extract_github_repos
+}
+
+# Run the main function
+main "$@"
+
+# Script complete

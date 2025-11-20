@@ -1,0 +1,17 @@
+[Unit]
+Description=ThreatOS Package Update Monitor
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/threatos
+ExecStart=/opt/threatos/tools/pkg/monitor-updates.sh
+Restart=always
+RestartSec=60
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=threatos-update-monitor
+
+[Install]
+WantedBy=multi-user.target
