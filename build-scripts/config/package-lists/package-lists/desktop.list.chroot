@@ -1,0 +1,4 @@
+# Packages for a minimal desktop environment
+task-desktop
+xorg
+gnome-core

@@ -1,0 +1,158 @@
+# Security Tools
+# This file contains security tools to be installed in the live environment
+
+# Network Analysis
+tcpdump
+wireshark
+nmap
+netcat
+net-tools
+netdiscover
+netmask
+dnsutils
+iputils-ping
+iproute2
+mtr-tiny
+net-tools
+iputils-arping
+iputils-tracepath
+ipv6toolkit
+
+# Vulnerability Assessment
+nikto
+nuclei
+sqlmap
+skipfish
+wpscan
+wafw00f
+whatweb
+
+# Password Tools
+john
+hashcat
+hydra
+crunch
+cewl
+wordlists
+
+# Wireless Tools
+aircrack-ng
+reaver
+wifite
+kismet
+wavemon
+
+# Forensics Tools
+autopsy
+bulk-extractor
+dcfldd
+ddrescue
+foremost
+scalpel
+sleuthkit
+testdisk
+
+# Reverse Engineering
+radare2
+ghidra
+binwalk
+foremost
+hexedit
+strace
+ltrace
+
+# Web Application Tools
+burpsuite
+zaproxy
+nikto
+sqlmap
+wpscan
+wafw00f
+whatweb
+dirb
+dirbuster
+gobuster
+
+# Exploitation Tools
+metasploit-framework
+set
+exploitdb
+searchsploit
+msfpc
+
+# Privacy Tools
+tor
+torbrowser-launcher
+obfs4proxy
+obfsproxy
+
+# Crypto Tools
+apg
+bcrypt
+gnupg2
+opensc
+openssh-server
+openssl
+scdaemon
+secure-delete
+secure-delete
+steghide
+
+# System Tools
+apparmor
+auditd
+chkrootkit
+clamav
+fail2ban
+lynis
+rkhunter
+tripwire
+aide
+
+# Monitoring Tools
+htop
+iftop
+iotop
+nethogs
+sysstat
+
+# Development Tools
+git
+python3-pip
+python3-venv
+ruby
+gcc
+make
+automake
+autoconf
+libtool
+pkg-config
+
+# Additional Dependencies
+libpcap-dev
+libssl-dev
+libffi-dev
+python3-dev
+libxml2-dev
+libxslt1-dev
+zlib1g-dev
+libjpeg-dev
+libfreetype6-dev
+libldns-dev
+libssl-dev
+libffi-dev
+python3-pip
+python3-venv
+ruby-dev
+ruby-bundler
+libpq-dev
+libsqlite3-dev
+libmariadb-dev
+libcurl4-openssl-dev
+libpcre3-dev
+libgmp3-dev
+libgmp-dev
+libyaml-dev
+zlib1g-dev
+libreadline-dev
+libncurses5-dev
