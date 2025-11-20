@@ -1,0 +1,93 @@
+#!/bin/bash
+# ftpsync - Sync a Debian archive using rsync
+# Based on the Debian ftpsync script
+
+set -e
+
+# Default values
+DEFAULT_RSYNC_HOST="deb.debian.org"
+DEFAULT_RSYNC_PATH="debian"
+DEFAULT_TARGET="/srv/mirrors/debian"
+DEFAULT_RSYNC_OPTS=(
+    "-aH"
+    "--partial"
+    "--progress"
+    "--no-motd"
+    "--timeout=600"
+    "--delay-updates"
+    "--delete-after"
+    "--delete-excluded"
+    "--bwlimit=0"
+    "--no-owner"
+    "--no-group"
+)
+
+# Load configuration
+CONFIG_FILE="/etc/archvsync/ftpsync.conf"
+if [ -f "$CONFIG_FILE" ]; then
+    source "$CONFIG_FILE"
+fi
+
+# Set default values if not set in config
+RSYNC_HOST=${RSYNC_HOST:-$DEFAULT_RSYNC_HOST}
+RSYNC_PATH=${RSYNC_PATH:-$DEFAULT_RSYNC_PATH}
+TARGET=${TARGET:-$DEFAULT_TARGET}
+RSYNC_OPTS=("${RSYNC_OPTS[@]:-${DEFAULT_RSYNC_OPTS[@]}}")
+
+# Create target directory if it doesn't exist
+mkdir -p "$TARGET"
+
+# Function to run rsync
+run_rsync() {
+    local exclude=("${@:1:${#@}-1}")
+    local target="${@: -1}"
+    
+    local exclude_opts=()
+    for pattern in "${exclude[@]}"; do
+        exclude_opts+=("--exclude=$pattern")
+    done
+    
+    rsync "${RSYNC_OPTS[@]}" "${exclude_opts[@]}" "rsync://${RSYNC_HOST}/${RSYNC_PATH}/${target}" "${TARGET}/${target}"
+}
+
+# Main sync function
+sync_archive() {
+    echo "Starting sync of ${RSYNC_HOST}/${RSYNC_PATH}"
+    
+    # First, sync the root directory
+    run_rsync ""
+    
+    # Then sync the rest of the archive
+    run_rsync "*/" "dists/"
+    run_rsync "*/" "pool/"
+    
+    # Update the timestamp
+    date > "${TARGET}/.lastsync"
+    
+    echo "Sync completed successfully"
+}
+
+# Handle command line arguments
+case "$1" in
+    --help|-h)
+        echo "Usage: $0 [options]"
+        echo "Options:"
+        echo "  --help, -h    Show this help message"
+        echo "  --config=FILE Use specified config file (default: /etc/archvsync/ftpsync.conf)"
+        exit 0
+        ;;
+    --config=*)
+        CONFIG_FILE="${1#--config=}"
+        if [ -f "$CONFIG_FILE" ]; then
+            source "$CONFIG_FILE"
+        else
+            echo "Error: Config file $CONFIG_FILE not found"
+            exit 1
+        fi
+        ;;
+esac
+
+# Run the sync
+sync_archive
+
+exit 0

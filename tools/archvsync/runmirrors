@@ -1,0 +1,135 @@
+#!/bin/bash
+# runmirrors - Notify leaf nodes of available updates
+# Based on the Debian runmirrors script
+
+set -e
+
+# Default values
+DEFAULT_CONFIG="/etc/archvsync/runmirrors.conf"
+DEFAULT_LOG_DIR="/var/log/archvsync"
+DEFAULT_LOCK_FILE="/var/lock/archvsync-runmirrors"
+DEFAULT_MAIL_TO="root"
+DEFAULT_MAIL_FROM="archvsync@$(hostname -f)"
+DEFAULT_MAIL_SUBJECT="[archvsync] Mirror updates notification"
+
+# Load configuration
+if [ -f "$DEFAULT_CONFIG" ]; then
+    source "$DEFAULT_CONFIG"
+fi
+
+# Set default values if not set in config
+LOG_DIR=${LOG_DIR:-$DEFAULT_LOG_DIR}
+LOCK_FILE=${LOCK_FILE:-$DEFAULT_LOCK_FILE}
+MAIL_TO=${MAIL_TO:-$DEFAULT_MAIL_TO}
+MAIL_FROM=${MAIL_FROM:-$DEFAULT_MAIL_FROM}
+MAIL_SUBJECT=${MAIL_SUBJECT:-$DEFAULT_MAIL_SUBJECT}
+
+# Ensure log directory exists
+mkdir -p "$LOG_DIR"
+LOG_FILE="${LOG_DIR}/runmirrors-$(date +%Y%m%d).log"
+
+# Function to log messages
+log() {
+    local level="$1"
+    local message="${@:2}"
+    local timestamp=$(date "+%Y-%m-%d %H:%M:%S")
+    echo "[$timestamp] [$level] $message" | tee -a "$LOG_FILE"
+}
+
+# Function to send email
+send_mail() {
+    local subject="$1"
+    local body="$2"
+    
+    {
+        echo "From: $MAIL_FROM"
+        echo "To: $MAIL_TO"
+        echo "Subject: $subject"
+        echo "Date: $(date -R)"
+        echo ""
+        echo "$body"
+    } | sendmail -t
+}
+
+# Function to check if a mirror needs updating
+check_mirror() {
+    local mirror="$1"
+    local last_update="${LOG_DIR}/lastupdate-${mirror//[^a-zA-Z0-9]/-}"
+    local current_time=$(date +%s)
+    local last_update_time=0
+    
+    if [ -f "$last_update" ]; then
+        last_update_time=$(stat -c %Y "$last_update" 2>/dev/null || echo 0)
+    fi
+    
+    # Consider a mirror as updated if it was updated in the last hour
+    if [ $((current_time - last_update_time)) -lt 3600 ]; then
+        log "INFO" "Mirror $mirror was recently updated, skipping notification"
+        return 1
+    fi
+    
+    # Touch the update file
+    touch "$last_update"
+    return 0
+}
+
+# Main function
+main() {
+    # Check for lock file
+    if [ -e "$LOCK_FILE" ]; then
+        log "ERROR" "Lock file $LOCK_FILE exists, another instance might be running"
+        exit 1
+    fi
+    
+    # Create lock file
+    echo "$$"> "$LOCK_FILE"
+    trap 'rm -f "$LOCK_FILE"' EXIT
+    
+    log "INFO" "Starting mirror update notifications"
+    
+    # Process each mirror
+    for mirror in "${MIRRORS[@]}"; do
+        log "INFO" "Processing mirror: $mirror"
+        
+        if check_mirror "$mirror"; then
+            log "INFO" "Notifying mirror: $mirror"
+            # Here you would typically trigger the mirror update
+            # For example: ssh $mirror /path/to/update-script
+            
+            # For now, just log and send notification
+            local message="Mirror $mirror has been updated"
+            log "INFO" "$message"
+            
+            if [ "$SEND_EMAIL" = "yes" ]; then
+                send_mail "$MAIL_SUBJECT - $mirror" "$message"
+            fi
+        fi
+    done
+    
+    log "INFO" "Mirror update notifications completed"
+}
+
+# Handle command line arguments
+case "$1" in
+    --help|-h)
+        echo "Usage: $0 [options]"
+        echo "Options:"
+        echo "  --help, -h    Show this help message"
+        echo "  --config=FILE Use specified config file (default: $DEFAULT_CONFIG)"
+        exit 0
+        ;;
+    --config=*)
+        CONFIG_FILE="${1#--config=}"
+        if [ -f "$CONFIG_FILE" ]; then
+            source "$CONFIG_FILE"
+        else
+            echo "Error: Config file $CONFIG_FILE not found"
+            exit 1
+        fi
+        ;;
+esac
+
+# Run the main function
+main
+
+exit 0
