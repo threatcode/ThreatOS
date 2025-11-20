@@ -1,0 +1,23 @@
+Origin: ThreatOS
+Label: ThreatOS
+Codename: bookworm
+Architectures: amd64 source
+Components: main contrib non-free
+Description: ThreatOS Repository
+SignWith: default
+
+Origin: Debian
+Label: Debian
+Codename: bookworm
+Architectures: amd64 source
+Components: main contrib non-free
+Description: Debian Bookworm Repository
+SignWith: default
+
+Origin: Debian
+Label: Debian Security
+Codename: bookworm-security
+Architectures: amd64 source
+Components: main contrib non-free
+Description: Debian Security Updates
+SignWith: default

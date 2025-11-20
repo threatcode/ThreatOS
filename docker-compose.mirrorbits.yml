@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:alpine
+    container_name: mirrorbits-redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    networks:
+      - mirrorbits_net
+
+  mirrorbits:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.mirrorbits
+    container_name: mirrorbits
+    restart: unless-stopped
+    depends_on:
+      - redis
+    environment:
+      - MIRRORBITS_ENVIRONMENT=production
+      - MIRRORBITS_REDIS=redis://redis:6379/0
+    volumes:
+      - ./tools/mirrorbits/mirrorbits.conf:/etc/mirrorbits.conf
+      - /path/to/your/repository:/srv/repository:ro
+    networks:
+      - mirrorbits_net
+
+  nginx:
+    image: nginx:alpine
+    container_name: mirrorbits-nginx
+    restart: unless-stopped
+    depends_on:
+      - mirrorbits
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./tools/nginx/conf.d:/etc/nginx/conf.d
+      - ./tools/nginx/letsencrypt:/etc/letsencrypt
+      - ./tools/nginx/logs:/var/log/nginx
+    networks:
+      - mirrorbits_net
+
+  certbot:
+    image: certbot/certbot
+    container_name: mirrorbits-certbot
+    volumes:
+      - ./tools/nginx/letsencrypt:/etc/letsencrypt
+      - ./tools/nginx/conf.d:/etc/nginx/conf.d
+    command: certonly --webroot --webroot-path=/var/www/certbot --email your-email@example.com --agree-tos --no-eff-email -d mirrors.yourdomain.com
+    networks:
+      - mirrorbits_net
+
+networks:
+  mirrorbits_net:
+    driver: bridge
+
+volumes:
+  redis_data:
+  nginx_conf:
+  nginx_letsencrypt:
+  nginx_logs:

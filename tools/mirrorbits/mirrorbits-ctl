@@ -1,0 +1,85 @@
+#!/bin/bash
+
+# Mirrorbits Control Script
+# Usage: ./mirrorbits-ctl {start|stop|restart|status|update}
+
+CONFIG_FILE="$(dirname "$0")/mirrorbits.conf"
+DOCKER_COMPOSE_FILE="$(dirname "$0")/../docker-compose.mirrorbits.yml"
+
+# Check if running as root
+if [ "$(id -u)" -ne 0 ]; then
+    echo "This script must be run as root"
+    exit 1
+fi
+
+# Check if docker-compose is installed
+if ! command -v docker-compose &> /dev/null; then
+    echo "Error: docker-compose is not installed"
+    exit 1
+fi
+
+# Function to start Mirrorbits
+start() {
+    echo "Starting Mirrorbits..."
+    docker-compose -f "$DOCKER_COMPOSE_FILE" up -d
+    echo "Mirrorbits started"
+}
+
+# Function to stop Mirrorbits
+stop() {
+    echo "Stopping Mirrorbits..."
+    docker-compose -f "$DOCKER_COMPOSE_FILE" down
+    echo "Mirrorbits stopped"
+}
+
+# Function to restart Mirrorbits
+restart() {
+    stop
+    start
+}
+
+# Function to check status
+status() {
+    docker-compose -f "$DOCKER_COMPOSE_FILE" ps
+}
+
+# Function to update mirrors
+update() {
+    echo "Updating mirrors..."
+    docker-compose -f "$DOCKER_COMPOSE_FILE" exec mirrorbits mirrorbits -conf /etc/mirrorbits.conf update
+}
+
+# Function to show help
+show_help() {
+    echo "Usage: $0 {start|stop|restart|status|update}"
+    echo "  start   - Start Mirrorbits service"
+    echo "  stop    - Stop Mirrorbits service"
+    echo "  restart - Restart Mirrorbits service"
+    echo "  status  - Show Mirrorbits service status"
+    echo "  update  - Update mirror information"
+}
+
+# Main script logic
+case "$1" in
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    restart)
+        restart
+        ;;
+    status)
+        status
+        ;;
+    update)
+        update
+        ;;
+    *)
+        show_help
+        exit 1
+        ;;
+esac
+
+exit 0
