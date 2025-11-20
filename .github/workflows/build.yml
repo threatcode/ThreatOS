@@ -18,8 +18,11 @@ jobs:
       
     - name: Install dependencies
       run: |
+        # First, update package lists
         apt-get update
-        apt-get install -y \
+        
+        # Install base dependencies
+        apt-get install -y --no-install-recommends \
           live-build \
           squashfs-tools \
           genisoimage \
@@ -27,15 +30,18 @@ jobs:
           isolinux \
           syslinux \
           syslinux-efi \
-          grub-pc \
           grub-efi-amd64 \
-          grub-efi-ia32 \
           grub-common \
           grub2-common \
           mtools \
           xorriso \
           wget \
-          git
+          git \
+          ca-certificates
+          
+        # Clean up package cache to reduce image size
+        apt-get clean
+        rm -rf /var/lib/apt/lists/*
           
     - name: Make scripts executable
       run: |
